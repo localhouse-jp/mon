@@ -2,8 +2,22 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import BusItem from './components/BusItem';
 import StationCard from './components/StationCard';
 import { ErrorScreen, LoadingScreen, NoDataScreen } from './components/StatusScreens';
-import { DisplayDirection, STATION_LAYOUT, StationDirections, TimetableData, Train } from './types/timetable';
-import { calculateRemainingMinutes, extractStationName, formatDate, formatDirectionTitle, formatTime, getLineColor } from './utils/timeUtils';
+import {
+  BusStop,
+  DisplayDirection,
+  STATION_LAYOUT,
+  StationDirections,
+  TimetableData,
+  Train
+} from './types/timetable';
+import {
+  calculateRemainingMinutes,
+  extractStationName,
+  formatDate,
+  formatDirectionTitle,
+  formatTime,
+  getLineColor
+} from './utils/timeUtils';
 
 interface TrainBoardProps {
   timetableData: TimetableData | null;
@@ -13,6 +27,10 @@ interface TrainBoardProps {
   loading?: boolean;
   error?: string;
 }
+
+// 時間間隔の定数（ミリ秒）
+const UPDATE_INTERVAL_MS = 1000;
+const MAX_DISPLAY_TRAINS = 3;
 
 const TrainBoard: React.FC<TrainBoardProps> = ({
   timetableData,
@@ -25,11 +43,21 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   // 現在時刻の状態管理
   const [now, setNow] = useState<Date>(new Date());
 
-  // 1秒ごとに現在時刻を更新（元の60000ミリ秒から1000ミリ秒に変更）
+  // 時刻を更新する間隔を設定
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), UPDATE_INTERVAL_MS);
     return () => clearInterval(timer);
   }, []);
+
+  // 列車が現在時刻以降かどうかを判断する関数
+  const isTrainUpcoming = useCallback((hour: string | number, minute: string | number): boolean => {
+    const hourNum = typeof hour === 'string' ? parseInt(hour, 10) : hour;
+    const minuteNum = typeof minute === 'string' ? parseInt(minute, 10) : minute;
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return hourNum > currentHour || (hourNum === currentHour && minuteNum >= currentMinute);
+  }, [now]);
 
   // 列車データを取得する関数
   const getTrainsForDisplay = useCallback((stationKey: string, directionKey: string): Train[] => {
@@ -51,26 +79,33 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     // 現在時刻以降の電車をフィルタリング
     const filteredTrains = trains.filter((train: Train) => {
       if (!train.hour || !train.minute) return false;
-
-      const hourNum = parseInt(train.hour);
-      const currentHourNum = now.getHours();
-      const trainMinute = parseInt(train.minute);
-      const currentMinute = now.getMinutes();
-
-      return hourNum > currentHourNum ||
-        (hourNum === currentHourNum && trainMinute >= currentMinute);
+      return isTrainUpcoming(train.hour, train.minute);
     });
 
-    let upcomingTrains = filteredTrains.slice(0, 3); // 直近3件に制限
+    let upcomingTrains = filteredTrains.slice(0, MAX_DISPLAY_TRAINS);
 
-    // もし現在時刻以降に電車がなければ、時間に関係なく最初の3件を表示
+    // もし現在時刻以降に電車がなければ、時間に関係なく最初の数件を表示
     if (upcomingTrains.length === 0 && trains.length > 0) {
-      console.log(`${stationKey} ${directionKey} の時間帯に電車がありません。全ての電車を表示します。`);
-      upcomingTrains = trains.slice(0, 3);
+      upcomingTrains = trains.slice(0, MAX_DISPLAY_TRAINS);
     }
 
     return upcomingTrains;
-  }, [stationsMap, isHoliday, now]);
+  }, [stationsMap, isHoliday, isTrainUpcoming]);
+
+  // 電車データをDisplayTrain形式に変換
+  const convertToDisplayTrain = useCallback((train: Train): {
+    time: string;
+    destination: string;
+    type: string;
+    remainingMinutes: number;
+  } => {
+    return {
+      time: formatTime(train.hour, train.minute),
+      destination: train.destination,
+      type: train.trainType,
+      remainingMinutes: calculateRemainingMinutes(train.hour, train.minute, now)
+    };
+  }, [now]);
 
   // 駅データを準備 - useMemoでパフォーマンス最適化
   const stationsData = useMemo(() => {
@@ -97,46 +132,79 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         };
       }
 
-      // 左方向（上り）のデータ
-      const leftTrains = getTrainsForDisplay(stationKey, directions.left);
-      stationGroups[stationName].directions.push({
-        station: stationName,
-        title: formatDirectionTitle(stationKey, directions.left),
-        color: stationColor,
-        trains: leftTrains.map(train => ({
-          time: formatTime(train.hour, train.minute),
-          destination: train.destination,
-          type: train.trainType,
-          remainingMinutes: calculateRemainingMinutes(train.hour, train.minute, now)
-        }))
-      });
+      // 左右方向のデータを追加
+      ['left', 'right'].forEach(side => {
+        const directionKey = directions[side as keyof typeof directions];
+        const trains = getTrainsForDisplay(stationKey, directionKey);
+        const displayTrains = trains.map(convertToDisplayTrain);
 
-      // 右方向（下り）のデータ
-      const rightTrains = getTrainsForDisplay(stationKey, directions.right);
-      stationGroups[stationName].directions.push({
-        station: stationName,
-        title: formatDirectionTitle(stationKey, directions.right),
-        color: stationColor,
-        trains: rightTrains.map(train => ({
-          time: formatTime(train.hour, train.minute),
-          destination: train.destination,
-          type: train.trainType,
-          remainingMinutes: calculateRemainingMinutes(train.hour, train.minute, now)
-        }))
+        stationGroups[stationName].directions.push({
+          station: stationName,
+          title: formatDirectionTitle(stationKey, directionKey),
+          color: stationColor,
+          trains: displayTrains
+        });
       });
     }
 
     return stationGroups;
-  }, [stationsMap, getTrainsForDisplay, now]);
+  }, [stationsMap, getTrainsForDisplay, convertToDisplayTrain]);
+
+  // バス停のスケジュールを処理する
+  const processBusSchedules = useCallback((busData?: any) => {
+    if (!busData) {
+      return {};
+    }
+
+    const result: Record<string, any> = {};
+    const dayType = isHoliday ? 'B' : 'A';
+
+    // stops配列がある場合（新構造）
+    if (busData.stops && Array.isArray(busData.stops)) {
+      busData.stops.forEach((stop: BusStop) => {
+        if (stop.operationType && stop.operationType !== dayType) {
+          return; // 運行タイプが一致しない場合はスキップ
+        }
+
+        if (!result[stop.stopName]) {
+          result[stop.stopName] = {};
+        }
+
+        result[stop.stopName][stop.routeName] = {
+          weekday: stop.schedule.flatMap(hourData =>
+            hourData.minutes.map(min => ({
+              hour: hourData.hour,
+              minute: min
+            }))
+          ).sort((a, b) =>
+            a.hour - b.hour || a.minute - b.minute
+          )
+        };
+      });
+    } else {
+      // 元の形式のデータ（バス停名をキーとして持つオブジェクト形式）
+      Object.entries(busData).forEach(([key, value]) => {
+        // メタデータフィールドをスキップ
+        if (key === 'lastUpdated' || key === 'operationType' || key === 'date' || key === 'stops') {
+          return;
+        }
+        result[key] = value;
+      });
+    }
+
+    return result;
+  }, [isHoliday]);
 
   // 近鉄バスの時刻表データを処理
   const busStationsData = useMemo(() => {
-    // APIレスポンスに合わせて処理方法を変更
-    // 近鉄バスデータがない場合は空の配列を返す
+    // バスデータがない場合は空の配列を返す
     if (!timetableData?.kintetsuBus) return [];
 
     const busColor = getLineColor("近鉄バス");
     const isHolidayMode = isHoliday ? "holiday" : "weekday";
+
+    // バス停データを処理
+    const busStopsData = processBusSchedules(timetableData.kintetsuBus);
 
     // バス停情報を格納する配列
     const busStations: {
@@ -147,15 +215,20 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 
     try {
       // バス停名でループ（例：八戸ノ里駅前、近畿大学東門前）
-      Object.entries(timetableData.kintetsuBus).forEach(([stopName, routes]) => {
+      Object.entries(busStopsData).forEach(([stopName, routes]) => {
         // lastUpdated や他のメタデータをスキップ
-        if (typeof routes !== 'object' || stopName === 'lastUpdated' ||
-          stopName === 'operationType' || stopName === 'date' || stopName === 'stops') {
+        if (stopName === 'lastUpdated' || stopName === 'operationType' ||
+          stopName === 'date' || stopName === 'stops') {
           return;
         }
 
         // 取得したすべてのバスの時刻データを保存する配列
-        let allBuses: { time: string, destination: string, type: string, remainingMinutes: number }[] = [];
+        let allBuses: {
+          time: string,
+          destination: string,
+          type: string,
+          remainingMinutes: number
+        }[] = [];
 
         // 各ルートでループ（例：近畿大学東門前→八戸ノ里駅前）
         Object.entries(routes).forEach(([routeName, schedules]) => {
@@ -168,23 +241,15 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
           }
 
           // 現在時刻以降のバスをフィルタリング
-          const currentHour = now.getHours();
-          const currentMinute = now.getMinutes();
-
           const filteredBuses = schedule
             .filter(bus => {
               if (!bus.hour || !bus.minute) return false;
-
-              const busHour = parseInt(bus.hour);
-              const busMinute = parseInt(bus.minute);
-
-              return busHour > currentHour ||
-                (busHour === currentHour && busMinute >= currentMinute);
+              return isTrainUpcoming(bus.hour, bus.minute);
             })
             .map(bus => ({
               time: formatTime(bus.hour, bus.minute),
-              destination: "", // 行き先情報を空にして表示しない
-              type: "", // タイプ情報も表示しない
+              destination: routeName, // ルート名を行き先として表示
+              type: "",
               remainingMinutes: calculateRemainingMinutes(bus.hour, bus.minute, now)
             }));
 
@@ -194,15 +259,17 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         // 時間順にソート
         allBuses.sort((a, b) => a.remainingMinutes - b.remainingMinutes);
 
-        // 直近3件に制限
-        const upcomingBuses = allBuses.slice(0, 3);
+        // 直近の便に制限
+        const upcomingBuses = allBuses.slice(0, MAX_DISPLAY_TRAINS);
 
         // バス停情報を追加
-        busStations.push({
-          station: stopName,
-          color: busColor,
-          trains: upcomingBuses
-        });
+        if (upcomingBuses.length > 0) {
+          busStations.push({
+            station: stopName,
+            color: busColor,
+            trains: upcomingBuses
+          });
+        }
       });
 
       console.log("処理された近鉄バスデータ:", busStations.map(s => s.station));
@@ -212,7 +279,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     }
 
     return busStations;
-  }, [timetableData?.kintetsuBus, now, isHoliday]);
+  }, [timetableData?.kintetsuBus, now, isHoliday, isTrainUpcoming, processBusSchedules]);
 
   // 状態に応じた画面表示
   if (loading) {
