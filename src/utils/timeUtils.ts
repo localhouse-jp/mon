@@ -20,6 +20,14 @@ export const calculateRemainingMinutes = (hour: string, minute: string, now: Dat
   // 現在時刻が電車時刻を過ぎている場合は翌日の電車として計算
   if (trainTime < now) {
     trainTime.setDate(trainTime.getDate() + 1);
+    
+    // 翌日の電車の場合、表示する残り時間に上限を設けて1440分(24時間)にならないようにする
+    // 例えば6時間(360分)以内の電車のみ表示する
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
+    if (trainTime.getTime() - now.getTime() > sixHoursInMs) {
+      // 6時間以上先の電車は通常表示しない
+      return 0;
+    }
   }
 
   const diffMs = trainTime.getTime() - now.getTime();

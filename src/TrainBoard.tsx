@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import StationCard from './components/StationCard';
+import BusItem from './components/BusItem';
 import { ErrorScreen, LoadingScreen, NoDataScreen } from './components/StatusScreens';
 import { DisplayDirection, STATION_LAYOUT, StationDirections, TimetableData, Train } from './types/timetable';
 import { calculateRemainingMinutes, extractStationName, formatDate, formatDirectionTitle, formatTime, getLineColor } from './utils/timeUtils';
@@ -283,10 +284,12 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
                   <div>
                     {busStation.trains.length > 0 ? (
                       busStation.trains.map((train, trainIdx) => (
-                        <div key={trainIdx} className="flex justify-center items-center px-4 py-3 border-t border-gray-700">
-                          <span className="text-2xl font-bold" style={{ color: busStation.color }}>{train.time}</span>
-                          <span className="text-white ml-3">（あと{train.remainingMinutes}分）</span>
-                        </div>
+                        <BusItem 
+                          key={trainIdx}
+                          time={train.time}
+                          remainingMinutes={train.remainingMinutes}
+                          color={busStation.color}
+                        />
                       ))
                     ) : (
                       <div className="text-center p-3 text-gray-400 italic text-sm">
