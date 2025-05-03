@@ -24,9 +24,9 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   // 現在時刻の状態管理
   const [now, setNow] = useState<Date>(new Date());
 
-  // 1分ごとに現在時刻を更新
+  // 1秒ごとに現在時刻を更新（元の60000ミリ秒から1000ミリ秒に変更）
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 60000);
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -146,13 +146,13 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       {/* ヘッダー：日付＋現在時刻 */}
       <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
         <div className="flex flex-col">
-          <div className="text-xl font-bold">{formatDate(now)}</div>
+          <div className="text-xl font-bold font-mono">{formatDate(now)}</div>
           <div className="text-xs text-amber-400">
             {isHoliday ? `休日ダイヤ${holidayName ? ` (${holidayName})` : ''}` : '平日ダイヤ'}
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <div className="text-3xl font-extrabold text-white">{now.toLocaleTimeString('ja-JP', { hour12: false })}</div>
+          <div className="text-3xl font-extrabold text-white font-mono">{now.toLocaleTimeString('ja-JP', { hour12: false })}</div>
         </div>
       </header>
 
@@ -173,7 +173,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       </main>
 
       {/* フッター */}
-      <footer className="text-center py-2 text-sm text-gray-500 bg-gray-800">
+      <footer className="text-center py-2 text-sm text-gray-500 bg-gray-800 font-mono">
         {timetableData?.lastUpdated ?
           `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}` :
           `最終更新: ${now.toLocaleString('ja-JP')}`
