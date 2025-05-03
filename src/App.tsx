@@ -255,7 +255,7 @@ function App() {
   const renderTimetable = (trains: Train[] | undefined, directionKey: string) => {
     if (!trains || trains.length === 0) {
       return (
-        <div className="text-center p-8 text-gray-400 italic">この時間帯の電車はありません</div>
+        <div className="text-center p-2 text-gray-400 italic text-xs">この時間帯の電車はありません</div>
       );
     }
 
@@ -269,16 +269,16 @@ function App() {
 
       return hourNum > currentHourNum ||
         (hourNum === currentHourNum && trainMinute >= currentMinute);
-    }).slice(0, 4); // 直近4件に制限
+    }).slice(0, 3); // 直近3件に制限
 
     if (upcomingTrains.length === 0) {
       return (
-        <div className="text-center p-8 text-gray-400 italic">この時間帯の電車はありません</div>
+        <div className="text-center p-2 text-gray-400 italic text-xs">この時間帯の電車はありません</div>
       );
     }
 
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         {upcomingTrains.map((train, index) => {
           const isNearCurrent = train.hour === currentHour &&
             Math.abs(parseInt(train.minute) - currentMinute) < 10;
@@ -290,23 +290,23 @@ function App() {
           return (
             <div
               key={index}
-              className={`flex items-center bg-gray-900 rounded-lg p-4 border border-gray-700 
+              className={`flex items-center bg-gray-900 rounded p-1 border border-gray-700 
                 ${isNearCurrent ? 'bg-blue-900 border-yellow-400 pulse' : ''}`}
             >
-              <div className={`font-mono text-2xl min-w-[90px] mr-8
+              <div className={`font-mono text-lg min-w-[70px] mr-2
                 ${isNearCurrent ? 'text-yellow-400 text-shadow-yellow' : 'text-blue-300 text-shadow-blue'}`}>
                 <span>{train.hour}</span>
-                <span className="blink px-1 text-blue-200">:</span>
+                <span className="blink px-0.5 text-blue-200">:</span>
                 <span>{train.minute.padStart(2, '0')}</span>
               </div>
 
               <div className="flex flex-col flex-1">
-                <div className={`text-xl font-bold ${isNearCurrent ? 'text-white' : 'text-gray-200'}`}>
+                <div className={`text-sm font-bold ${isNearCurrent ? 'text-white' : 'text-gray-200'}`}>
                   {train.destination}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-400 mt-1">{train.trainType || "普通"}</span>
-                  <span className="text-sm text-green-400 font-bold mt-1">{remainingTimeText}</span>
+                  <span className="text-xs text-gray-400">{train.trainType || "普通"}</span>
+                  <span className="text-xs text-green-400 font-bold">{remainingTimeText}</span>
                 </div>
               </div>
             </div>
@@ -319,17 +319,17 @@ function App() {
   // 駅ごとに2列レイアウトで表示
   const renderStationLayout = () => {
     if (loading) {
-      return <p className="text-center p-8 text-blue-300 text-xl">データ読み込み中...</p>;
+      return <p className="text-center p-4 text-blue-300 text-lg">データ読み込み中...</p>;
     }
 
     if (error) {
       return (
-        <div className="flex justify-center items-center p-12">
-          <div className="bg-red-900/30 text-pink-300 p-8 rounded-lg border border-pink-900 text-center">
+        <div className="flex justify-center items-center p-4">
+          <div className="bg-red-900/30 text-pink-300 p-4 rounded-lg border border-pink-900 text-center text-sm">
             <p>{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-6 px-6 py-3 bg-pink-800 hover:bg-pink-700 text-white border-none rounded transition-colors"
+              className="mt-3 px-4 py-2 bg-pink-800 hover:bg-pink-700 text-white border-none rounded transition-colors"
             >
               再読み込み
             </button>
@@ -339,24 +339,24 @@ function App() {
     }
 
     if (!timetableData) {
-      return <p className="text-center p-8 text-blue-300 text-xl">時刻表データがありません</p>;
+      return <p className="text-center p-4 text-blue-300 text-lg">時刻表データがありません</p>;
     }
 
     const dayType = isHoliday ? "holiday" : "weekday";
 
     return (
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-2">
         {Object.entries(STATION_LAYOUT).map(([stationKey, directions]) => {
           // APIから取得したデータに駅情報があるか確認
           const stationData = stationsMap.get(stationKey);
 
           if (!stationData) {
             return (
-              <div key={stationKey} className="bg-black/30 rounded-lg p-4">
-                <h2 className="text-2xl font-bold text-white text-center mb-4 pb-2 border-b border-gray-700">
+              <div key={stationKey} className="bg-black/30 rounded-lg p-1">
+                <h2 className="text-base font-bold text-white text-center mb-1 pb-1 border-b border-gray-700">
                   {stationKey}
                 </h2>
-                <p className="text-center p-4 text-gray-400 italic">データが取得できませんでした</p>
+                <p className="text-center p-1 text-gray-400 italic text-xs">データが取得できませんでした</p>
               </div>
             );
           }
@@ -368,18 +368,18 @@ function App() {
           const isJRStation = stationKey.includes('ＪＲ');
 
           return (
-            <div key={stationKey} className="bg-black/30 rounded-lg p-4">
-              <h2 className="text-2xl font-bold text-white text-center mb-4 pb-2 border-b border-gray-700">
+            <div key={stationKey} className="bg-black/30 rounded-lg p-1">
+              <h2 className="text-base font-bold text-white text-center mb-1 pb-1 border-b border-gray-700">
                 {stationKey}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-1">
                 {leftDirectionData && (
-                  <div className="bg-black rounded-lg p-4 border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
-                    <h3 className="text-xl font-bold text-amber-400 text-center mb-4 pb-2 border-b border-gray-700">
+                  <div className="bg-black rounded p-1 border border-gray-700 shadow-[0_0_5px_rgba(0,100,255,0.5)]">
+                    <h3 className="text-xs font-bold text-amber-400 text-center pb-1 border-b border-gray-700">
                       {directions.left.split(" ").slice(-2).join(" ")}
                     </h3>
-                    {isJRStation 
+                    {isJRStation
                       // JR線の場合は直接配列データを使用
                       ? renderTimetable(leftDirectionData, directions.left)
                       // 近鉄線の場合は平日/休日を考慮
@@ -388,8 +388,8 @@ function App() {
                 )}
 
                 {rightDirectionData && (
-                  <div className="bg-black rounded-lg p-4 border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
-                    <h3 className="text-xl font-bold text-amber-400 text-center mb-4 pb-2 border-b border-gray-700">
+                  <div className="bg-black rounded p-1 border border-gray-700 shadow-[0_0_5px_rgba(0,100,255,0.5)]">
+                    <h3 className="text-xs font-bold text-amber-400 text-center pb-1 border-b border-gray-700">
                       {directions.right.split(" ").slice(-2).join(" ")}
                     </h3>
                     {isJRStation
@@ -405,7 +405,7 @@ function App() {
         })}
 
         {timetableData.lastUpdated && (
-          <div className="text-center mt-4 text-gray-400 text-sm">
+          <div className="text-center text-gray-400 text-[10px]">
             最終更新: {new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}
           </div>
         )}
@@ -414,26 +414,30 @@ function App() {
   };
 
   return (
-    <main className="bg-gray-900 text-white min-h-screen p-4">
-      <div className="bg-black p-4 rounded-lg mb-6 text-center border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
-        <h1 className="text-2xl font-bold mb-1">電車時刻表</h1>
-        <div className="flex justify-between my-2">
-          <p>{formatDate()}</p>
-          <p className="text-amber-400 font-bold">
-            {isHoliday
-              ? `休日ダイヤ${holidayName ? `（${holidayName}）` : ''}`
-              : '平日ダイヤ'}
-          </p>
+    <main className="bg-gray-900 text-white h-screen w-screen overflow-hidden flex items-center justify-center">
+      <div className="aspect-[9/16] h-full max-h-full w-auto flex flex-col overflow-hidden no-scrollbar">
+        <div className="bg-black p-1.5 rounded-lg mb-1 text-center border border-gray-700 shadow-[0_0_10px_rgba(0,100,255,0.5)]">
+          <h1 className="text-lg font-bold">電車時刻表</h1>
+          <div className="flex justify-between text-xs">
+            <p>{formatDate()}</p>
+            <p className="text-amber-400 font-bold">
+              {isHoliday
+                ? `休日ダイヤ${holidayName ? `（${holidayName}）` : ''}`
+                : '平日ダイヤ'}
+            </p>
+          </div>
+          <div>
+            <p className="text-green-400 text-base font-bold">
+              {`現在時刻: ${currentHour.padStart(2, '0')}:${currentMinute < 10 ? '0' + currentMinute : currentMinute}`}
+            </p>
+          </div>
         </div>
-        <div className="mt-2">
-          <p className="text-green-400 text-lg font-bold">
-            {`現在時刻: ${currentHour.padStart(2, '0')}:${currentMinute < 10 ? '0' + currentMinute : currentMinute}`}
-          </p>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto">
-        {renderStationLayout()}
+        <div className="flex-1 overflow-hidden no-scrollbar px-0.5">
+          <div className="scaled-content" style={{ transform: 'scale(0.98)', transformOrigin: 'top center' }}>
+            {renderStationLayout()}
+          </div>
+        </div>
       </div>
     </main>
   );

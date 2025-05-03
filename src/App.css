@@ -35,3 +35,27 @@
 .text-shadow-yellow {
   text-shadow: 0 0 8px rgba(255, 235, 59, 0.8);
 }
+
+/* 9:16のアスペクト比でコンテナを設定 */
+.aspect-9-16 {
+  aspect-ratio: 9/16;
+  max-height: 100vh;
+  width: auto;
+  margin: 0 auto;
+}
+
+/* スクロールバーを隠しつつ、コンテンツをスケーリングして表示 */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* 時刻表セクションのスケーリング */
+.scaled-content {
+  transform-origin: top center;
+  transform: scale(0.98);
+}
