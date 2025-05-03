@@ -74,7 +74,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     const dayType = isHoliday ? "holiday" : "weekday";
     const trains = isJRStation ? directionData : directionData[dayType];
 
-    if (!trains || trains.length === 0) return [];
+    if (!trains || !Array.isArray(trains) || trains.length === 0) return [];
 
     // 現在時刻以降の電車をフィルタリング
     const filteredTrains = trains.filter((train: Train) => {
@@ -85,7 +85,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     let upcomingTrains = filteredTrains.slice(0, MAX_DISPLAY_TRAINS);
 
     // もし現在時刻以降に電車がなければ、時間に関係なく最初の数件を表示
-    if (upcomingTrains.length === 0 && trains.length > 0) {
+    if (upcomingTrains.length === 0 && Array.isArray(trains) && trains.length > 0) {
       upcomingTrains = trains.slice(0, MAX_DISPLAY_TRAINS);
     }
 
@@ -97,7 +97,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     time: string;
     destination: string;
     type: string;
-    remainingMinutes: number;
+    remainingMinutes: number
   } => {
     return {
       time: formatTime(train.hour, train.minute),
@@ -233,9 +233,13 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         // 各ルートでループ（例：近畿大学東門前→八戸ノ里駅前）
         Object.entries(routes).forEach(([routeName, schedules]) => {
           // 適切なスケジュール（平日/休日）を取得
-          const schedule = schedules[isHolidayMode];
+          // schedules の型を明示的に指定し、インデックスアクセスを安全に行う
+          const typedSchedules = schedules as { weekday?: any[], holiday?: any[] };
+          const schedule = typedSchedules && typeof typedSchedules === 'object'
+            ? typedSchedules[isHolidayMode]
+            : undefined;
 
-          if (!Array.isArray(schedule)) {
+          if (!schedule || !Array.isArray(schedule)) {
             console.log(`バス停 ${stopName} のルート ${routeName} に有効なスケジュールがありません`);
             return;
           }
