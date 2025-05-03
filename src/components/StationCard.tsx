@@ -11,7 +11,7 @@ interface TrainItemProps {
 const TrainItem: React.FC<TrainItemProps> = ({ train, color }) => {
   // 残り時間が20分以下かどうかを判定
   const isAlmostTime = train.remainingMinutes <= 20 && train.remainingMinutes > 0;
-  
+
   // 20分以下の場合のスタイル - 点滅せずにハイライトのみ
   const almostTimeStyle = isAlmostTime ? {
     backgroundColor: 'rgba(252, 211, 77, 0.3)',
@@ -23,7 +23,7 @@ const TrainItem: React.FC<TrainItemProps> = ({ train, color }) => {
     <div className={`flex justify-between items-center px-4 py-3 border-t border-gray-700`}>
       <span className="text-2xl font-bold" style={{ color }}>{train.time}</span>
       <span className="flex-1 mx-3 truncate text-lg text-gray-200">{train.destination}</span>
-      <span 
+      <span
         className={`text-lg font-medium ${isAlmostTime ? 'text-yellow-400 font-bold' : 'text-gray-400'}`}
         style={almostTimeStyle}
       >

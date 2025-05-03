@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import StationCard from './components/StationCard';
 import BusItem from './components/BusItem';
+import StationCard from './components/StationCard';
 import { ErrorScreen, LoadingScreen, NoDataScreen } from './components/StatusScreens';
 import { DisplayDirection, STATION_LAYOUT, StationDirections, TimetableData, Train } from './types/timetable';
 import { calculateRemainingMinutes, extractStationName, formatDate, formatDirectionTitle, formatTime, getLineColor } from './utils/timeUtils';
@@ -137,7 +137,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 
     const busColor = getLineColor("近鉄バス");
     const isHolidayMode = isHoliday ? "holiday" : "weekday";
-    
+
     // バス停情報を格納する配列
     const busStations: {
       station: string;
@@ -193,10 +193,10 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 
         // 時間順にソート
         allBuses.sort((a, b) => a.remainingMinutes - b.remainingMinutes);
-        
+
         // 直近3件に制限
         const upcomingBuses = allBuses.slice(0, 3);
-        
+
         // バス停情報を追加
         busStations.push({
           station: stopName,
@@ -206,11 +206,11 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       });
 
       console.log("処理された近鉄バスデータ:", busStations.map(s => s.station));
-      
+
     } catch (error) {
       console.error("近鉄バスデータの処理中にエラーが発生しました:", error);
     }
-    
+
     return busStations;
   }, [timetableData?.kintetsuBus, now, isHoliday]);
 
@@ -284,7 +284,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
                   <div>
                     {busStation.trains.length > 0 ? (
                       busStation.trains.map((train, trainIdx) => (
-                        <BusItem 
+                        <BusItem
                           key={trainIdx}
                           time={train.time}
                           remainingMinutes={train.remainingMinutes}

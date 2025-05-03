@@ -10,7 +10,7 @@ interface BusItemProps {
 const BusItem: React.FC<BusItemProps> = ({ time, remainingMinutes, color }) => {
   // 残り時間が20分以下かどうかを判定
   const isAlmostTime = remainingMinutes <= 20 && remainingMinutes > 0;
-  
+
   // 20分以下の場合のスタイル - 点滅せずにハイライトのみ
   const almostTimeStyle = isAlmostTime ? {
     backgroundColor: 'rgba(252, 211, 77, 0.3)',
@@ -21,7 +21,7 @@ const BusItem: React.FC<BusItemProps> = ({ time, remainingMinutes, color }) => {
   return (
     <div className="flex justify-center items-center px-4 py-3 border-t border-gray-700">
       <span className="text-2xl font-bold" style={{ color }}>{time}</span>
-      <span 
+      <span
         className={`text-white ml-3 ${isAlmostTime ? 'text-yellow-400 font-bold' : ''}`}
         style={almostTimeStyle}
       >
