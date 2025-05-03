@@ -27,6 +27,30 @@ function App() {
 
         const data: TimetableData = await response.json();
         console.log("API データ読み込み成功:", data);
+
+        // 近鉄バスデータの構造を詳細に確認
+        if (data.kintetsuBus) {
+          console.log("近鉄バスデータの構造:", JSON.stringify(data.kintetsuBus, null, 2));
+        } else {
+          console.log("近鉄バスデータがありません");
+        }
+
+        // 今日の日付を取得してバスの運行タイプを確認
+        const today = formatDateToYYYYMMDD(new Date());
+        if (!data.kintetsuBus) {
+          // kintetsuBusがない場合、専用エンドポイントから取得を試みる
+          try {
+            const busResponse = await fetch(`http://localhost:3000/api/kintetsu-bus/calendar/${today}`);
+            if (busResponse.ok) {
+              const busData = await busResponse.json();
+              data.kintetsuBus = busData;
+              console.log("近鉄バスデータ取得成功:", busData);
+            }
+          } catch (busErr) {
+            console.error('近鉄バスデータの取得に失敗:', busErr);
+          }
+        }
+
         setTimetableData(data);
 
         // データの整形
@@ -48,7 +72,7 @@ function App() {
 
         // その他の会社データがあれば処理
         Object.entries(data).forEach(([company, stations]) => {
-          if (company !== "kintetsu" && company !== "jr" && company !== "lastUpdated" && stations) {
+          if (company !== "kintetsu" && company !== "jr" && company !== "kintetsuBus" && company !== "lastUpdated" && stations) {
             Object.entries(stations).forEach(([stationKey, directions]) => {
               stationsData.set(stationKey, directions);
             });

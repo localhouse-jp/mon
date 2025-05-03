@@ -7,6 +7,24 @@ export interface Train {
   detailUrl?: string;
 }
 
+// バス時刻表の型定義
+export interface BusTime {
+  hour: number;
+  minute: number;
+  destination?: string;
+  type?: string; // A日/B日など
+}
+
+export interface BusStop {
+  stopName: string;
+  routeName: string;
+  operationType?: string; // 'A'または'B'
+  schedule: {
+    hour: number;
+    minutes: number[];
+  }[];
+}
+
 export interface DirectionData {
   weekday?: Train[];
   holiday?: Train[];
@@ -25,7 +43,12 @@ export interface CompanyStations {
 export interface TimetableData {
   kintetsu?: CompanyStations;
   jr?: CompanyStations;
-  [company: string]: CompanyStations | undefined | string;  // stringを追加して lastUpdated を許可
+  kintetsuBus?: {
+    stops?: BusStop[];
+    operationType?: string; // 'A'または'B'
+    date?: string;
+  };
+  [company: string]: CompanyStations | undefined | string | { stops?: BusStop[], operationType?: string, date?: string };  // stringを追加して lastUpdated を許可
   lastUpdated: string;
 }
 
@@ -42,6 +65,7 @@ export interface DisplayDirection {
   title: string;
   color: string;
   trains: DisplayTrain[];
+  isBus?: boolean;
 }
 
 // 2列に表示する駅と方向の定義
@@ -67,4 +91,15 @@ export const LINE_COLORS = {
   "奈良線": "#E60012",  // 近鉄奈良線: 赤
   "大阪線": "#F8B400",  // 近鉄大阪線: 黄
   "ＪＲ俊徳道駅": "#009944",  // JRおおさか東線: 緑
+  "近鉄バス": "#1E50A2",  // 近鉄バス: 青
+};
+
+// バス停のルート定義
+export const BUS_ROUTES = {
+  "近畿大学東門前": {
+    routes: ["八戸ノ里駅前→近畿大学東門前", "近畿大学東門前→八戸ノ里駅前"]
+  },
+  "八戸ノ里駅前": {
+    routes: ["八戸ノ里駅前→近畿大学東門前", "近畿大学東門前→八戸ノ里駅前"]
+  }
 };

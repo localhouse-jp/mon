@@ -128,6 +128,91 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
     return stationGroups;
   }, [stationsMap, getTrainsForDisplay, now]);
 
+  // 近鉄バスの時刻表データを処理
+  const busStationsData = useMemo(() => {
+    // APIレスポンスに合わせて処理方法を変更
+    // 近鉄バスデータがない場合は空の配列を返す
+    if (!timetableData?.kintetsuBus) return [];
+
+    const busColor = getLineColor("近鉄バス");
+    const isHolidayMode = isHoliday ? "holiday" : "weekday";
+    
+    // バス停情報を格納する配列
+    const busStations: {
+      station: string;
+      color: string;
+      trains: { time: string, destination: string, type: string, remainingMinutes: number }[];
+    }[] = [];
+
+    try {
+      // バス停名でループ（例：八戸ノ里駅前、近畿大学東門前）
+      Object.entries(timetableData.kintetsuBus).forEach(([stopName, routes]) => {
+        // lastUpdated や他のメタデータをスキップ
+        if (typeof routes !== 'object' || stopName === 'lastUpdated' ||
+          stopName === 'operationType' || stopName === 'date' || stopName === 'stops') {
+          return;
+        }
+
+        // 取得したすべてのバスの時刻データを保存する配列
+        let allBuses: { time: string, destination: string, type: string, remainingMinutes: number }[] = [];
+
+        // 各ルートでループ（例：近畿大学東門前→八戸ノ里駅前）
+        Object.entries(routes).forEach(([routeName, schedules]) => {
+          // 適切なスケジュール（平日/休日）を取得
+          const schedule = schedules[isHolidayMode];
+
+          if (!Array.isArray(schedule)) {
+            console.log(`バス停 ${stopName} のルート ${routeName} に有効なスケジュールがありません`);
+            return;
+          }
+
+          // 現在時刻以降のバスをフィルタリング
+          const currentHour = now.getHours();
+          const currentMinute = now.getMinutes();
+
+          const filteredBuses = schedule
+            .filter(bus => {
+              if (!bus.hour || !bus.minute) return false;
+
+              const busHour = parseInt(bus.hour);
+              const busMinute = parseInt(bus.minute);
+
+              return busHour > currentHour ||
+                (busHour === currentHour && busMinute >= currentMinute);
+            })
+            .map(bus => ({
+              time: formatTime(bus.hour, bus.minute),
+              destination: "", // 行き先情報を空にして表示しない
+              type: "", // タイプ情報も表示しない
+              remainingMinutes: calculateRemainingMinutes(bus.hour, bus.minute, now)
+            }));
+
+          allBuses = [...allBuses, ...filteredBuses];
+        });
+
+        // 時間順にソート
+        allBuses.sort((a, b) => a.remainingMinutes - b.remainingMinutes);
+        
+        // 直近3件に制限
+        const upcomingBuses = allBuses.slice(0, 3);
+        
+        // バス停情報を追加
+        busStations.push({
+          station: stopName,
+          color: busColor,
+          trains: upcomingBuses
+        });
+      });
+
+      console.log("処理された近鉄バスデータ:", busStations.map(s => s.station));
+      
+    } catch (error) {
+      console.error("近鉄バスデータの処理中にエラーが発生しました:", error);
+    }
+    
+    return busStations;
+  }, [timetableData?.kintetsuBus, now, isHoliday]);
+
   // 状態に応じた画面表示
   if (loading) {
     return <LoadingScreen />;
@@ -158,6 +243,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 
       {/* メイン：駅ごとにグループ化 */}
       <main className="p-6 flex-1 overflow-auto">
+        {/* 電車の時刻表データ */}
         {Object.values(stationsData).map((stationGroup, idx) => (
           <div key={idx} className="mb-6">
             <h2 className="text-2xl font-bold mb-4" style={{ color: stationGroup.color }}>
@@ -170,6 +256,49 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
             </div>
           </div>
         ))}
+
+        {/* バスの時刻表データ */}
+        {busStationsData.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold border-t border-gray-700 pt-6 mt-8 mb-6"
+              style={{ color: getLineColor("近鉄バス") }}>
+              近鉄バス
+              {timetableData.kintetsuBus?.operationType && (
+                <span className="text-base ml-3 text-amber-400">
+                  {timetableData.kintetsuBus.operationType}日運行
+                </span>
+              )}
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              {busStationsData.map((busStation, idx) => (
+                <div key={`bus-${idx}`} className="mb-6 bg-gray-800 rounded-lg overflow-hidden shadow-sm">
+                  {/* バス停名をヘッダーとして表示 */}
+                  <div
+                    className="flex items-center px-4 py-2 bg-gray-700 border-l-4"
+                    style={{ borderColor: busStation.color }}
+                  >
+                    <span className="text-base font-bold text-white truncate">{busStation.station}</span>
+                  </div>
+                  {/* バスの時刻リスト */}
+                  <div>
+                    {busStation.trains.length > 0 ? (
+                      busStation.trains.map((train, trainIdx) => (
+                        <div key={trainIdx} className="flex justify-center items-center px-4 py-3 border-t border-gray-700">
+                          <span className="text-2xl font-bold" style={{ color: busStation.color }}>{train.time}</span>
+                          <span className="text-white ml-3">（あと{train.remainingMinutes}分）</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center p-3 text-gray-400 italic text-sm">
+                        この時間帯のバスはありません
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </main>
 
       {/* フッター */}
