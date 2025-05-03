@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-// 新しいデータ構造の型定義
+// データ構造の型定義
 interface Train {
   hour: string;
   minute: string;
@@ -11,8 +11,10 @@ interface Train {
 }
 
 interface DirectionData {
-  weekday: Train[];
-  holiday: Train[];
+  weekday?: Train[];
+  holiday?: Train[];
+  // JR線の場合、weekday/holidayの区別がなく直接配列が入る可能性がある
+  [key: string]: Train[] | undefined;
 }
 
 interface StationDirections {
@@ -30,9 +32,26 @@ interface TimetableData {
   lastUpdated: string;
 }
 
+// 2列に表示する駅と方向の定義
+const STATION_LAYOUT = {
+  // 近鉄
+  "奈良線 八戸ノ里駅": {
+    left: "奈良線 大阪難波・尼崎(阪神)方面",
+    right: "奈良線 近鉄奈良方面"
+  },
+  "大阪線 長瀬駅": {
+    left: "大阪線 大阪上本町方面",
+    right: "大阪線 河内国分方面"
+  },
+  // JR
+  "ＪＲ俊徳道駅": {
+    left: "放出・新大阪・大阪（地下ホーム）方面",
+    right: "久宝寺・奈良方面"
+  }
+};
+
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [stationsMap, setStationsMap] = useState<Map<string, StationDirections>>(new Map());
   const [isHoliday, setIsHoliday] = useState(false);
   const [holidayName, setHolidayName] = useState("");
@@ -67,31 +86,34 @@ function App() {
         console.log("API データ読み込み成功:", data);
         setTimetableData(data);
 
-        // データの整形と会社選択の処理
-        const companies = Object.keys(data).filter(key => key !== 'lastUpdated');
-        console.log("検出された会社:", companies);
+        // データの整形
+        const stationsData = new Map<string, StationDirections>();
 
-        if (companies.length > 0) {
-          const firstCompany = companies[0];
-          setSelectedCompany(firstCompany);
-          console.log("選択された会社:", firstCompany);
-
-          // 最初の会社の全駅データをMapに変換
-          if (data[firstCompany]) {
-            const stationsData = new Map<string, StationDirections>();
-            Object.entries(data[firstCompany] as CompanyStations).forEach(([stationKey, directions]) => {
-              console.log("駅データ処理:", stationKey);
-              stationsData.set(stationKey, directions);
-            });
-            console.log("駅データ処理完了:", Array.from(stationsData.keys()));
-            setStationsMap(stationsData);
-          } else {
-            console.error("選択された会社のデータがありません:", firstCompany);
-          }
-        } else {
-          console.error("会社データが見つかりません");
+        // 近鉄のデータを処理
+        if (data.kintetsu) {
+          Object.entries(data.kintetsu).forEach(([stationKey, directions]) => {
+            stationsData.set(stationKey, directions);
+          });
         }
 
+        // JRのデータを処理
+        if (data.jr) {
+          Object.entries(data.jr).forEach(([stationKey, directions]) => {
+            stationsData.set(stationKey, directions);
+          });
+        }
+
+        // その他の会社データがあれば処理
+        Object.entries(data).forEach(([company, stations]) => {
+          if (company !== "kintetsu" && company !== "jr" && company !== "lastUpdated" && stations) {
+            Object.entries(stations).forEach(([stationKey, directions]) => {
+              stationsData.set(stationKey, directions);
+            });
+          }
+        });
+
+        console.log("駅データ処理完了:", Array.from(stationsData.keys()));
+        setStationsMap(stationsData);
         setLoading(false);
       } catch (err) {
         console.error('時刻表データの読み込みエラー:', err);
@@ -218,19 +240,6 @@ function App() {
     }
   };
 
-  // 時刻表を時間ごとにグループ化する関数
-  const groupTimetableByHour = (trains) => {
-    if (!trains) return {};
-
-    return trains.reduce((grouped, train) => {
-      if (!grouped[train.hour]) {
-        grouped[train.hour] = [];
-      }
-      grouped[train.hour].push(train);
-      return grouped;
-    }, {});
-  };
-
   // 表示する日付と曜日情報
   const formatDate = () => {
     const today = currentTime;
@@ -242,164 +251,190 @@ function App() {
     return `${year}年${month}月${day}日（${dayOfWeekStr}）`;
   };
 
-  // エラー表示
-  const renderError = () => {
+  // 時刻表を描画する関数
+  const renderTimetable = (trains: Train[] | undefined, directionKey: string) => {
+    if (!trains || trains.length === 0) {
+      return (
+        <div className="text-center p-8 text-gray-400 italic">この時間帯の電車はありません</div>
+      );
+    }
+
+    // 現在時刻以降の電車をフィルタリング
+    let upcomingTrains = trains.filter(train => {
+      if (!train.hour || !train.minute) return false;
+
+      const hourNum = parseInt(train.hour);
+      const currentHourNum = parseInt(currentHour);
+      const trainMinute = parseInt(train.minute);
+
+      return hourNum > currentHourNum ||
+        (hourNum === currentHourNum && trainMinute >= currentMinute);
+    }).slice(0, 4); // 直近4件に制限
+
+    if (upcomingTrains.length === 0) {
+      return (
+        <div className="text-center p-8 text-gray-400 italic">この時間帯の電車はありません</div>
+      );
+    }
+
     return (
-      <div className="error-container">
-        <div className="error-message">
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="reload-button"
-          >
-            再読み込み
-          </button>
-        </div>
+      <div className="flex flex-col gap-3">
+        {upcomingTrains.map((train, index) => {
+          const isNearCurrent = train.hour === currentHour &&
+            Math.abs(parseInt(train.minute) - currentMinute) < 10;
+
+          // 残り時間を計算
+          const remainingMinutes = calculateRemainingTime(train.hour, train.minute);
+          const remainingTimeText = formatRemainingTime(remainingMinutes);
+
+          return (
+            <div
+              key={index}
+              className={`flex items-center bg-gray-900 rounded-lg p-4 border border-gray-700 
+                ${isNearCurrent ? 'bg-blue-900 border-yellow-400 pulse' : ''}`}
+            >
+              <div className={`font-mono text-2xl min-w-[90px] mr-8
+                ${isNearCurrent ? 'text-yellow-400 text-shadow-yellow' : 'text-blue-300 text-shadow-blue'}`}>
+                <span>{train.hour}</span>
+                <span className="blink px-1 text-blue-200">:</span>
+                <span>{train.minute.padStart(2, '0')}</span>
+              </div>
+
+              <div className="flex flex-col flex-1">
+                <div className={`text-xl font-bold ${isNearCurrent ? 'text-white' : 'text-gray-200'}`}>
+                  {train.destination}
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400 mt-1">{train.trainType || "普通"}</span>
+                  <span className="text-sm text-green-400 font-bold mt-1">{remainingTimeText}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
-  // 最終更新日時の表示
-  const renderLastUpdated = () => {
-    if (!timetableData?.lastUpdated) return null;
-
-    try {
-      const updateDate = new Date(timetableData.lastUpdated);
-      const year = updateDate.getFullYear();
-      const month = updateDate.getMonth() + 1;
-      const day = updateDate.getDate();
-      const hours = updateDate.getHours().toString().padStart(2, '0');
-      const minutes = updateDate.getMinutes().toString().padStart(2, '0');
-
-      return (
-        <div className="last-updated">
-          最終更新: {year}年{month}月{day}日 {hours}:{minutes}
-        </div>
-      );
-    } catch (e) {
-      return null;
-    }
-  };
-
-  // 全ての駅のデータを表示
-  const renderAllStations = () => {
+  // 駅ごとに2列レイアウトで表示
+  const renderStationLayout = () => {
     if (loading) {
-      return <p className="loading-text">データ読み込み中...</p>;
+      return <p className="text-center p-8 text-blue-300 text-xl">データ読み込み中...</p>;
     }
 
     if (error) {
-      return renderError();
+      return (
+        <div className="flex justify-center items-center p-12">
+          <div className="bg-red-900/30 text-pink-300 p-8 rounded-lg border border-pink-900 text-center">
+            <p>{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 px-6 py-3 bg-pink-800 hover:bg-pink-700 text-white border-none rounded transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        </div>
+      );
     }
 
-    if (!timetableData || !selectedCompany) {
-      return <p className="loading-text">時刻表データがありません</p>;
+    if (!timetableData) {
+      return <p className="text-center p-8 text-blue-300 text-xl">時刻表データがありません</p>;
     }
-
-    console.log("レンダリング開始:", selectedCompany);
-    console.log("駅数:", stationsMap.size);
 
     const dayType = isHoliday ? "holiday" : "weekday";
-    const companyLabel = selectedCompany === "kintetsu" ? "近鉄" : selectedCompany === "jr" ? "JR" : selectedCompany;
 
     return (
-      <div className="all-directions">
-        <div className="company-header">{companyLabel}</div>
-        {Array.from(stationsMap.entries()).map(([stationKey, directions]) => {
-          console.log("駅レンダリング:", stationKey, directions);
+      <div className="flex flex-col gap-8">
+        {Object.entries(STATION_LAYOUT).map(([stationKey, directions]) => {
+          // APIから取得したデータに駅情報があるか確認
+          const stationData = stationsMap.get(stationKey);
+
+          if (!stationData) {
+            return (
+              <div key={stationKey} className="bg-black/30 rounded-lg p-4">
+                <h2 className="text-2xl font-bold text-white text-center mb-4 pb-2 border-b border-gray-700">
+                  {stationKey}
+                </h2>
+                <p className="text-center p-4 text-gray-400 italic">データが取得できませんでした</p>
+              </div>
+            );
+          }
+
+          const leftDirectionData = stationData[directions.left];
+          const rightDirectionData = stationData[directions.right];
+
+          // JR線かどうかを判定（駅名に「ＪＲ」が含まれるか）
+          const isJRStation = stationKey.includes('ＪＲ');
+
           return (
-            <div key={stationKey} className="station-container">
-              <h2 className="station-header">{stationKey}</h2>
-              {Object.entries(directions).map(([directionKey, directionData]) => {
-                console.log("方向レンダリング:", directionKey, directionData);
-                const directionTrains = directionData[dayType] || [];
-                console.log("電車データ:", directionTrains.length, "件");
+            <div key={stationKey} className="bg-black/30 rounded-lg p-4">
+              <h2 className="text-2xl font-bold text-white text-center mb-4 pb-2 border-b border-gray-700">
+                {stationKey}
+              </h2>
 
-                // 現在時刻以降の電車をフィルタリング
-                let upcomingTrains = [];
-                directionTrains.forEach(train => {
-                  if (train.hour && train.minute) { // hourとminuteがあるかチェック
-                    const hourNum = parseInt(train.hour);
-                    const currentHourNum = parseInt(currentHour);
-                    const trainMinute = parseInt(train.minute);
-
-                    if (hourNum > currentHourNum ||
-                      (hourNum === currentHourNum && trainMinute >= currentMinute)) {
-                      upcomingTrains.push(train);
-                    }
-                  }
-                });
-
-                // 直近4件に制限して表示
-                upcomingTrains = upcomingTrains.slice(0, 4);
-
-                return (
-                  <div key={directionKey} className="direction-container">
-                    <h3 className="direction-header">{directionKey}</h3>
-                    <div className="upcoming-trains">
-                      {upcomingTrains.length === 0 ? (
-                        <div className="no-trains">この時間帯の電車はありません</div>
-                      ) : (
-                        upcomingTrains.map((train, index) => {
-                          const isNearCurrent = train.hour === currentHour &&
-                            Math.abs(parseInt(train.minute) - currentMinute) < 10;
-
-                          // 残り時間を計算
-                          const remainingMinutes = calculateRemainingTime(train.hour, train.minute);
-                          const remainingTimeText = formatRemainingTime(remainingMinutes);
-
-                          return (
-                            <div
-                              key={index}
-                              className={`train-item ${isNearCurrent ? 'current-train' : ''}`}
-                            >
-                              <div className="train-time">
-                                <span className="train-hour">{train.hour}</span>
-                                <span className="time-separator">:</span>
-                                <span className="train-minute">{train.minute.padStart(2, '0')}</span>
-                              </div>
-                              <div className="train-info">
-                                <div className="train-destination">{train.destination}</div>
-                                <div className="train-details">
-                                  <span className="train-type">{train.trainType}</span>
-                                  <span className="remaining-time">{remainingTimeText}</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {leftDirectionData && (
+                  <div className="bg-black rounded-lg p-4 border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
+                    <h3 className="text-xl font-bold text-amber-400 text-center mb-4 pb-2 border-b border-gray-700">
+                      {directions.left.split(" ").slice(-2).join(" ")}
+                    </h3>
+                    {isJRStation 
+                      // JR線の場合は直接配列データを使用
+                      ? renderTimetable(leftDirectionData, directions.left)
+                      // 近鉄線の場合は平日/休日を考慮
+                      : renderTimetable(leftDirectionData[dayType], directions.left)}
                   </div>
-                );
-              })}
+                )}
+
+                {rightDirectionData && (
+                  <div className="bg-black rounded-lg p-4 border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
+                    <h3 className="text-xl font-bold text-amber-400 text-center mb-4 pb-2 border-b border-gray-700">
+                      {directions.right.split(" ").slice(-2).join(" ")}
+                    </h3>
+                    {isJRStation
+                      // JR線の場合は直接配列データを使用
+                      ? renderTimetable(rightDirectionData, directions.right)
+                      // 近鉄線の場合は平日/休日を考慮
+                      : renderTimetable(rightDirectionData[dayType], directions.right)}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
-        {renderLastUpdated()}
+
+        {timetableData.lastUpdated && (
+          <div className="text-center mt-4 text-gray-400 text-sm">
+            最終更新: {new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
     <main className="bg-gray-900 text-white min-h-screen p-4">
-      <div className="header">
+      <div className="bg-black p-4 rounded-lg mb-6 text-center border-2 border-gray-700 shadow-[0_0_15px_rgba(0,100,255,0.5)]">
         <h1 className="text-2xl font-bold mb-1">電車時刻表</h1>
-        <div className="date-display">
+        <div className="flex justify-between my-2">
           <p>{formatDate()}</p>
-          <p className="schedule-type">
+          <p className="text-amber-400 font-bold">
             {isHoliday
               ? `休日ダイヤ${holidayName ? `（${holidayName}）` : ''}`
               : '平日ダイヤ'}
           </p>
         </div>
-        <div className="time-display">
-          <p className="current-time-display">
+        <div className="mt-2">
+          <p className="text-green-400 text-lg font-bold">
             {`現在時刻: ${currentHour.padStart(2, '0')}:${currentMinute < 10 ? '0' + currentMinute : currentMinute}`}
           </p>
         </div>
       </div>
 
-      {renderAllStations()}
+      <div className="max-w-7xl mx-auto">
+        {renderStationLayout()}
+      </div>
     </main>
   );
 }
