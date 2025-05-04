@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import TrainBoard from "./TrainBoard";
-import { StationDirections, TimetableData, DelayResponse } from "./types/timetable";
+import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
