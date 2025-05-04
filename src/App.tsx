@@ -144,7 +144,7 @@ function App() {
   // 祝日CSVデータを取得して解析する
   const fetchHolidaysData = async () => {
     try {
-      const response = await fetch('https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv');
+      const response = await fetch('/syukujitsu.csv');
       const text = await response.text();
 
       // CSVデータを解析
