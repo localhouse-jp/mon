@@ -145,7 +145,10 @@ function App() {
   const fetchHolidaysData = async () => {
     try {
       const response = await fetch('/syukujitsu.csv');
-      const text = await response.text();
+      // Shift-JISエンコードされたCSVを扱う
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('shift_jis');
+      const text = decoder.decode(buffer);
 
       // CSVデータを解析
       const rows = text.split('\n').slice(1); // ヘッダー行をスキップ
