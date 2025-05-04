@@ -35,6 +35,26 @@ function App() {
           console.log("近鉄バスデータがありません");
         }
 
+        // 近鉄バスデータから八戸ノ里駅前に関連する情報を削除
+        if (data.kintetsuBus) {
+          console.log("近鉄バスデータから八戸ノ里駅前に関連する情報を削除します。");
+          // stops 配列からフィルタリング
+          if (data.kintetsuBus.stops) {
+            const initialStopCount = data.kintetsuBus.stops.length;
+            data.kintetsuBus.stops = data.kintetsuBus.stops.filter(stop => stop.stopName !== '八戸ノ里駅前');
+            const finalStopCount = data.kintetsuBus.stops.length;
+            console.log(`stops 配列から ${initialStopCount - finalStopCount} 件の八戸ノ里駅前バス停情報を削除しました。`);
+          }
+          // トップレベルキーからも削除 (型を一時的に any に)
+          // 古いデータ形式が残っている場合に対応
+          const busDataAsAny = data.kintetsuBus as any;
+          if (busDataAsAny['八戸ノ里駅前']) {
+            delete busDataAsAny['八戸ノ里駅前'];
+            console.log("トップレベルキー '八戸ノ里駅前' を削除しました。");
+          }
+          console.log("削除処理後の近鉄バスデータ:", JSON.stringify(data.kintetsuBus, null, 2));
+        }
+
         // 今日の日付を取得してバスの運行タイプを確認
         const today = formatDateToYYYYMMDD(new Date());
         if (!data.kintetsuBus) {

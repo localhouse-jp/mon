@@ -19,6 +19,10 @@ import {
   getLineColor
 } from './utils/timeUtils';
 
+// 環境変数からデバッグ日時を取得
+const debugDateTimeString = import.meta.env.VITE_DEBUG_DATETIME;
+const initialDate = debugDateTimeString ? new Date(debugDateTimeString) : new Date();
+
 interface TrainBoardProps {
   timetableData: TimetableData | null;
   stationsMap: Map<string, StationDirections>;
@@ -40,14 +44,17 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   loading = false,
   error = ""
 }) => {
-  // 現在時刻の状態管理
-  const [now, setNow] = useState<Date>(new Date());
+  // 現在時刻の状態管理 - 初期値を環境変数または現在時刻に設定
+  const [now, setNow] = useState<Date>(initialDate);
 
-  // 時刻を更新する間隔を設定
+  // 時刻を更新する間隔を設定 (デバッグ時は更新しないようにする)
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), UPDATE_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
+    // デバッグ日時が設定されていない場合のみタイマーで更新
+    if (!debugDateTimeString) {
+      const timer = setInterval(() => setNow(new Date()), UPDATE_INTERVAL_MS);
+      return () => clearInterval(timer);
+    }
+  }, [debugDateTimeString]);
 
   // 列車が現在時刻以降かどうかを判断する関数
   const isTrainUpcoming = useCallback((hour: string | number, minute: string | number): boolean => {
