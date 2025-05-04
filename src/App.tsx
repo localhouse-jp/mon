@@ -117,6 +117,15 @@ function App() {
     fetchHolidaysData();
     // 遅延情報取得
     fetchDelayInfo();
+
+    // 5分ごとにデータを再取得
+    const intervalId = setInterval(() => {
+      loadTimetableData();
+      fetchHolidaysData();
+      fetchDelayInfo();
+    }, 300000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // 遅延情報を取得
