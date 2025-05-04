@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import TrainBoard from "./TrainBoard";
 import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
+import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
 import { fetchHolidayStatus } from "./utils/timeUtils";
 
 function App() {
@@ -22,92 +23,14 @@ function App() {
 
     async function loadTimetableData() {
       try {
-        // APIからデータを取得
-        const response = await fetch('http://localhost:3000/api/all');
-        if (!response.ok) {
-          throw new Error(`APIエラー: ${response.status}`);
-        }
-
-        const data: TimetableData = await response.json();
-        console.log("API データ読み込み成功:", data);
-
-        // 近鉄バスデータの構造を詳細に確認
-        if (data.kintetsuBus) {
-          console.log("近鉄バスデータの構造:", JSON.stringify(data.kintetsuBus, null, 2));
-        } else {
-          console.log("近鉄バスデータがありません");
-        }
-
-        // 近鉄バスデータから八戸ノ里駅前に関連する情報を削除
-        if (data.kintetsuBus) {
-          console.log("近鉄バスデータから八戸ノ里駅前に関連する情報を削除します。");
-          // stops 配列からフィルタリング
-          if (data.kintetsuBus.stops) {
-            const initialStopCount = data.kintetsuBus.stops.length;
-            data.kintetsuBus.stops = data.kintetsuBus.stops.filter(stop => stop.stopName !== '八戸ノ里駅前');
-            const finalStopCount = data.kintetsuBus.stops.length;
-            console.log(`stops 配列から ${initialStopCount - finalStopCount} 件の八戸ノ里駅前バス停情報を削除しました。`);
-          }
-          // トップレベルキーからも削除 (型を一時的に any に)
-          // 古いデータ形式が残っている場合に対応
-          const busDataAsAny = data.kintetsuBus as any;
-          if (busDataAsAny['八戸ノ里駅前']) {
-            delete busDataAsAny['八戸ノ里駅前'];
-            console.log("トップレベルキー '八戸ノ里駅前' を削除しました。");
-          }
-          console.log("削除処理後の近鉄バスデータ:", JSON.stringify(data.kintetsuBus, null, 2));
-        }
-
-        // 今日の日付を取得してバスの運行タイプを確認
-        const today = formatDateToYYYYMMDD(new Date());
-        if (!data.kintetsuBus) {
-          // kintetsuBusがない場合、専用エンドポイントから取得を試みる
-          try {
-            const busResponse = await fetch(`http://localhost:3000/api/kintetsu-bus/calendar/${today}`);
-            if (busResponse.ok) {
-              const busData = await busResponse.json();
-              data.kintetsuBus = busData;
-              console.log("近鉄バスデータ取得成功:", busData);
-            }
-          } catch (busErr) {
-            console.error('近鉄バスデータの取得に失敗:', busErr);
-          }
-        }
-
+        const data = await fetchTimetableData();
         setTimetableData(data);
-
-        // データの整形
-        const stationsData = new Map<string, StationDirections>();
-
-        // 近鉄のデータを処理
-        if (data.kintetsu) {
-          Object.entries(data.kintetsu).forEach(([stationKey, directions]) => {
-            stationsData.set(stationKey, directions);
-          });
-        }
-
-        // JRのデータを処理
-        if (data.jr) {
-          Object.entries(data.jr).forEach(([stationKey, directions]) => {
-            stationsData.set(stationKey, directions);
-          });
-        }
-
-        // その他の会社データがあれば処理
-        Object.entries(data).forEach(([company, stations]) => {
-          if (company !== "kintetsu" && company !== "jr" && company !== "kintetsuBus" && company !== "lastUpdated" && stations) {
-            Object.entries(stations).forEach(([stationKey, directions]) => {
-              stationsData.set(stationKey, directions);
-            });
-          }
-        });
-
-        console.log("駅データ処理完了:", Array.from(stationsData.keys()));
+        const stationsData = createStationsMap(data);
         setStationsMap(stationsData);
-        setLoading(false);
       } catch (err: any) {
         console.error('時刻表データの読み込みエラー:', err);
         setError(`データ取得エラー: ${err.message}`);
+      } finally {
         setLoading(false);
       }
     }
@@ -147,14 +70,6 @@ function App() {
     const { isHoliday: holidayFlag, name: holidayNameLocal } = await fetchHolidayStatus();
     setIsHoliday(holidayFlag);
     setHolidayName(holidayNameLocal);
-  };
-
-  // YYYY-MM-DD形式の文字列を返す
-  const formatDateToYYYYMMDD = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
   };
 
   // TrainBoardコンポーネントをメインの表示として使用
