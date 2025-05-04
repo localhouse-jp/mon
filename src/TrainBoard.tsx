@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import localhouseLogo from './assets/localhouse.png';
+import qrcode from './assets/qrcode.svg';
 import BusItem from './components/BusItem';
 import StationCard from './components/StationCard';
 import { ErrorScreen, LoadingScreen, NoDataScreen } from './components/StatusScreens';
@@ -310,7 +312,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   }
 
   return (
-    <div className="w-screen h-screen bg-gray-900 text-white font-sans overflow-hidden">
+    <div className="w-screen h-screen flex flex-col bg-gray-900 text-white font-sans overflow-hidden">
       {/* ヘッダー：日付＋現在時刻 */}
       <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
         <div className="flex flex-col">
@@ -391,12 +393,22 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         )}
       </main>
 
-      {/* フッター */}
-      <footer className="text-center py-2 text-sm text-gray-500 bg-gray-800 font-mono">
-        {timetableData?.lastUpdated ?
-          `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}` :
-          `最終更新: ${now.toLocaleString('ja-JP')}`
-        }
+      {/* フッター：2行レイアウト */}
+      <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
+        <div className="w-full flex justify-between items-center">
+          <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>
+            <span>
+              {timetableData?.lastUpdated
+                ? `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}`
+                : `最終更新: ${now.toLocaleString('ja-JP')}`}
+            </span>
+            <span className="text-xs text-gray-400">LOCALHOUSE / https://localhouse.jp</span>
+          </div>
+          <div className="flex items-center space-x-4 absolute right-4 bottom-4">
+            <img src={localhouseLogo} alt="Localhouse" className="h-16" />
+            <img src={qrcode} alt="QR Code" className="h-16" />
+          </div>
+        </div>
       </footer>
     </div>
   );
