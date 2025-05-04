@@ -30,7 +30,7 @@ interface TrainBoardProps {
 
 // 時間間隔の定数（ミリ秒）
 const UPDATE_INTERVAL_MS = 1000;
-const MAX_DISPLAY_TRAINS = 3;
+const MAX_DISPLAY_TRAINS = 4;
 
 const TrainBoard: React.FC<TrainBoardProps> = ({
   timetableData,
