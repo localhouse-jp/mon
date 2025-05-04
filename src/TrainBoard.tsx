@@ -4,6 +4,7 @@ import StationCard from './components/StationCard';
 import { ErrorScreen, LoadingScreen, NoDataScreen } from './components/StatusScreens';
 import {
   BusStop,
+  DelayResponse,
   DisplayDirection,
   STATION_LAYOUT,
   StationDirections,
@@ -30,6 +31,8 @@ interface TrainBoardProps {
   holidayName: string;
   loading?: boolean;
   error?: string;
+  // 遅延情報
+  delayResponse?: DelayResponse | null;
 }
 
 // 時間間隔の定数（ミリ秒）
@@ -42,7 +45,8 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   isHoliday,
   holidayName,
   loading = false,
-  error = ""
+  error = "",
+  delayResponse
 }) => {
   // 現在時刻の状態管理 - 初期値を環境変数または現在時刻に設定
   const [now, setNow] = useState<Date>(initialDate);
@@ -317,6 +321,11 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         </div>
         <div className="flex flex-col items-end">
           <div className="text-3xl font-extrabold text-white font-mono">{now.toLocaleTimeString('ja-JP', { hour12: false })}</div>
+          {delayResponse?.kintetsu && (
+            <div className="text-sm text-amber-400 mt-1">
+              近鉄: {delayResponse.kintetsu.status}
+            </div>
+          )}
         </div>
       </header>
 

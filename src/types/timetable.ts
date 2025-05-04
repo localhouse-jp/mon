@@ -52,6 +52,17 @@ export interface TimetableData {
   lastUpdated: string;
 }
 
+// 遅延情報の型定義
+export interface DelayInfo {
+  servertime: string;
+  status: string;
+}
+
+export interface DelayResponse {
+  kintetsu: DelayInfo;
+  jr?: DelayInfo | null;
+}
+
 // UI表示用の型定義
 export interface DisplayTrain {
   time: string;
