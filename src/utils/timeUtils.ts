@@ -142,3 +142,69 @@ export const formatDirectionTitle = (stationKey: string, directionKey: string): 
       return parts[parts.length - 1];
   }
 };
+
+/**
+ * CSVテキスト(Shift-JISデコード済)から祝日マップを生成
+ * @param text CSV全文
+ * @returns { [yyyy-mm-dd]: 祝日名 }
+ */
+export const parseHolidayCsv = (text: string): Record<string, string> => {
+  const rows = text.split('\n').slice(1);
+  const map: Record<string, string> = {};
+  rows.forEach(row => {
+    if (!row.trim()) return;
+    const cols = row.split(',');
+    if (cols.length < 2) return;
+    const dateParts = cols[0].replace(/"/g, '').split('/');
+    if (dateParts.length === 3) {
+      const key = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
+      map[key] = cols[1].replace(/"/g, '');
+    }
+  });
+  return map;
+};
+
+/**
+ * 日付が祝日または週末かを判定し、結果と名称を返す
+ * @param date 判定対象日
+ * @param holidaysMap 祝日マップ
+ */
+export const checkIsHoliday = (
+  date: Date,
+  holidaysMap: Record<string, string>
+): { isHoliday: boolean; name: string } => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const key = `${yyyy}-${mm}-${dd}`;
+  const dow = date.getDay();
+  if (holidaysMap[key]) {
+    return { isHoliday: true, name: holidaysMap[key] };
+  }
+  if (dow === 0) return { isHoliday: true, name: '日曜日' };
+  if (dow === 6) return { isHoliday: true, name: '土曜日' };
+  return { isHoliday: false, name: '' };
+};
+
+/**
+ * syukujitsu.csvから祝日の有無と名称を取得
+ * @returns Promise<{ isHoliday: boolean; name: string }>
+ */
+export const fetchHolidayStatus = async (): Promise<{ isHoliday: boolean; name: string }> => {
+  try {
+    const response = await fetch('/syukujitsu.csv');
+    const buffer = await response.arrayBuffer();
+    const decoder = new TextDecoder('shift_jis');
+    const text = decoder.decode(buffer);
+    const holidaysMap = parseHolidayCsv(text);
+    return checkIsHoliday(new Date(), holidaysMap);
+  } catch (e) {
+    console.error('祝日データ取得エラー:', e);
+    // 取得失敗時は週末判定のみ
+    const today = new Date();
+    const dow = today.getDay();
+    if (dow === 0) return { isHoliday: true, name: '日曜日' };
+    if (dow === 6) return { isHoliday: true, name: '土曜日' };
+    return { isHoliday: false, name: '' };
+  }
+};

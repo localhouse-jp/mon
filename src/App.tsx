@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import TrainBoard from "./TrainBoard";
 import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
+import { fetchHolidayStatus } from "./utils/timeUtils";
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
@@ -143,60 +144,9 @@ function App() {
 
   // 祝日CSVデータを取得して解析する
   const fetchHolidaysData = async () => {
-    try {
-      const response = await fetch('/syukujitsu.csv');
-      // Shift-JISエンコードされたCSVを扱う
-      const buffer = await response.arrayBuffer();
-      const decoder = new TextDecoder('shift_jis');
-      const text = decoder.decode(buffer);
-
-      // CSVデータを解析
-      const rows = text.split('\n').slice(1); // ヘッダー行をスキップ
-      const holidaysMap: Record<string, string> = {};
-
-      rows.forEach(row => {
-        if (!row.trim()) return;
-
-        // ShiftJISのCSVをUTF-8環境で解析するための簡易処理
-        const columns = row.split(',');
-        if (columns.length >= 2) {
-          // 日付フォーマットを変換（yyyy/mm/dd → yyyy-mm-dd）
-          const dateParts = columns[0].replace(/"/g, '').split('/');
-          if (dateParts.length === 3) {
-            const dateKey = `${dateParts[0]}-${dateParts[1].padStart(2, '0')}-${dateParts[2].padStart(2, '0')}`;
-            const holidayName = columns[1].replace(/"/g, '');
-            holidaysMap[dateKey] = holidayName;
-          }
-        }
-      });
-
-      // 今日が祝日かチェック
-      const today = new Date();
-      const dateString = formatDateToYYYYMMDD(today);
-
-      // 土曜日(6)、日曜日(0)、または祝日リストにある日付は休日と判定
-      const dayOfWeek = today.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-      if (holidaysMap[dateString]) {
-        setIsHoliday(true);
-        setHolidayName(holidaysMap[dateString]);
-      } else if (isWeekend) {
-        setIsHoliday(true);
-        setHolidayName(dayOfWeek === 0 ? "日曜日" : "土曜日");
-      } else {
-        setIsHoliday(false);
-        setHolidayName("");
-      }
-    } catch (error) {
-      console.error('祝日データの取得に失敗しました:', error);
-
-      // 祝日API取得失敗時は従来の方法で判定
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      setIsHoliday(dayOfWeek === 0 || dayOfWeek === 6);
-      setHolidayName(dayOfWeek === 0 ? "日曜日" : dayOfWeek === 6 ? "土曜日" : "");
-    }
+    const { isHoliday: holidayFlag, name: holidayNameLocal } = await fetchHolidayStatus();
+    setIsHoliday(holidayFlag);
+    setHolidayName(holidayNameLocal);
   };
 
   // YYYY-MM-DD形式の文字列を返す
