@@ -56,6 +56,12 @@ export interface TimetableData {
 export interface DelayInfo {
   servertime: string;
   status: string;
+  disruptions?: {
+    route: string;
+    status: string;
+    cause: string;
+    detailUrl: string;
+  }[];
 }
 
 export interface DelayResponse {

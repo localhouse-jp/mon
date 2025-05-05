@@ -323,11 +323,6 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         </div>
         <div className="flex flex-col items-end">
           <div className="text-3xl font-extrabold text-white font-mono">{now.toLocaleTimeString('ja-JP', { hour12: false })}</div>
-          {delayResponse?.kintetsu && (
-            <div className="text-sm text-amber-400 mt-1">
-              近鉄: {delayResponse.kintetsu.status}
-            </div>
-          )}
         </div>
       </header>
 
@@ -392,7 +387,37 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
           </>
         )}
       </main>
-
+      {/* 遅延情報セクション (フッター外) */}
+      {delayResponse && (
+        <div className="px-6 py-4 text-white">
+          <h3 className="text-xl font-bold mb-2">遅延情報</h3>
+          <div className="grid grid-cols-2">
+            {/* カラムヘッダー */}
+            <div>
+              <div className="text-lg font-semibold">近鉄</div>
+              <div className="text-sm text-amber-400 pt-2">{delayResponse.kintetsu.status}</div>
+              <div className="text-sm text-red-400 space-y-1">
+                {delayResponse.kintetsu.disruptions?.map((d, idx) => (
+                  <div key={idx}>
+                    {d.route}: {d.status} ({d.cause}){' '}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-lg font-semibold">JR</div>
+              <div className="text-sm text-amber-400 pt-2">{delayResponse.jr?.status ?? '—'}</div>
+              <div className="text-sm text-red-400 space-y-1">
+                {delayResponse.jr?.disruptions?.map((d, idx) => (
+                  <div key={idx}>
+                    {d.route}: {d.status} ({d.cause}){' '}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* フッター：2行レイアウト */}
       <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
         <div className="w-full flex justify-between items-center">
