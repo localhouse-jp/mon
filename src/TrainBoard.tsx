@@ -406,11 +406,11 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
             </div>
             <div>
               <div className="text-lg font-semibold">JR</div>
-              <div className="text-sm text-amber-400 pt-2">{delayResponse.jr?.status ?? '—'}</div>
+              <div className="text-sm text-amber-400 pt-2">{delayResponse.jr?.status}</div>
               <div className="text-sm text-red-400 space-y-1">
                 {delayResponse.jr?.disruptions?.map((d, idx) => (
                   <div key={idx}>
-                    {d.route}: {d.status} ({d.cause}){' '}
+                    {d.route}: {d.status}
                   </div>
                 ))}
               </div>

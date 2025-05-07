@@ -4,15 +4,14 @@ import RemainingTime from './common/RemainingTime';
 interface BusItemProps {
   time: string;
   remainingMinutes: number;
-  color: string;
 }
 
 // バス1件分の情報を表示するコンポーネント
-const BusItem: React.FC<BusItemProps> = ({ time, remainingMinutes, color }) => {
+const BusItem: React.FC<BusItemProps> = ({ time, remainingMinutes }) => {
   return (
-    <div className="flex justify-center items-center px-4 py-3 border-t border-gray-700">
-      <span className="text-2xl font-bold" style={{ color }}>{time}</span>
-      <span className="ml-3">
+    <div className="flex justify-center items-center px-4 py-3 border-t border-card-dark">
+      <span className="text-2xl font-bold text-accent-time">{time}</span>
+      <span className="ml-3 text-text-secondary">
         <RemainingTime minutes={remainingMinutes} format="default" />
       </span>
     </div>
