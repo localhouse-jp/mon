@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        mono: ["'Roboto Mono'", 'monospace'],
+      },
+
       colors: {
         bg: '#0E1116',         // ページ背景
         card: '#161B22',       // カード背景

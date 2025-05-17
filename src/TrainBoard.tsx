@@ -26,6 +26,10 @@ import {
 const debugDateTimeString = import.meta.env.VITE_DEBUG_DATETIME;
 const initialDate = debugDateTimeString ? new Date(debugDateTimeString) : new Date();
 
+// フッター表示設定 (デフォルト: 表示)
+const showFooterEnv = import.meta.env.VITE_SHOW_FOOTER;
+const showFooter = showFooterEnv !== 'false' && showFooterEnv !== '0';
+
 interface TrainBoardProps {
   timetableData: TimetableData | null;
   stationsMap: Map<string, StationDirections>;
@@ -419,22 +423,24 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         </div>
       )}
       {/* フッター：2行レイアウト */}
-      <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
-        <div className="w-full flex justify-between items-center">
-          <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>
-            <span>
-              {timetableData?.lastUpdated
-                ? `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}`
-                : `最終更新: ${now.toLocaleString('ja-JP')}`}
-            </span>
-            <span className="text-xs text-gray-400">LOCALHOUSE / https://localhouse.jp</span>
+      {showFooter && (
+        <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
+          <div className="w-full flex justify-between items-center">
+            <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>
+              <span>
+                {timetableData?.lastUpdated
+                  ? `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}`
+                  : `最終更新: ${now.toLocaleString('ja-JP')}`}
+              </span>
+              <span className="text-xs text-gray-400">LOCALHOUSE / https://localhouse.jp</span>
+            </div>
+            <div className="flex items-center space-x-4 absolute right-4 bottom-4">
+              <img src={localhouseLogo} alt="Localhouse" className="h-16" />
+              <img src={qrcode} alt="QR Code" className="h-16" />
+            </div>
           </div>
-          <div className="flex items-center space-x-4 absolute right-4 bottom-4">
-            <img src={localhouseLogo} alt="Localhouse" className="h-16" />
-            <img src={qrcode} alt="QR Code" className="h-16" />
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 };
