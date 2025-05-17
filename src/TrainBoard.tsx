@@ -376,7 +376,6 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
                           key={trainIdx}
                           time={train.time}
                           remainingMinutes={train.remainingMinutes}
-                          color={busStation.color}
                         />
                       ))
                     ) : (
