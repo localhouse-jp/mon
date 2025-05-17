@@ -11,7 +11,7 @@ interface TrainItemProps {
 const TrainItem: React.FC<TrainItemProps> = ({ train, color }) => {
   return (
     <div className="flex justify-between items-center px-4 py-3 border-t border-gray-700">
-      <span className="text-2xl font-bold" style={{ color }}>{train.time}</span>
+      <span className="text-2xl font-bold font-mono" style={{ color }}>{train.time}</span>
       <span className="flex-1 mx-3 truncate text-lg text-gray-200">{train.destination}</span>
       <RemainingTime minutes={train.remainingMinutes} format="compact" />
     </div>

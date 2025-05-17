@@ -11,7 +11,7 @@ interface BusItemProps {
 const BusItem: React.FC<BusItemProps> = ({ time, remainingMinutes, color }) => {
   return (
     <div className="flex justify-center items-center px-4 py-3 border-t border-gray-700">
-      <span className="text-2xl font-bold" style={{ color }}>{time}</span>
+      <span className="text-2xl font-bold font-mono" style={{ color }}>{time}</span>
       <span className="ml-3">
         <RemainingTime minutes={remainingMinutes} format="default" />
       </span>
