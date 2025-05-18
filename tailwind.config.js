@@ -8,6 +8,7 @@ export default {
     extend: {
       fontFamily: {
         mono: ["'Roboto Mono'", 'monospace'],
+        sans: ["'Noto Sans JP'", 'sans-serif'],
       },
 
       colors: {
