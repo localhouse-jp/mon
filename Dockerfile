@@ -12,6 +12,10 @@ RUN bun install
 # アプリケーションのソースコードをコピー
 COPY . .
 
+# 環境変数を設定
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 # アプリケーションのビルド (Tauriではなく、Webアプリケーションとしてビルド)
 RUN bun run build
 
