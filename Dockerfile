@@ -18,21 +18,19 @@ FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # generate runtime config template and entry script
-RUN set -eux; \
-  cat <<'EOF' > /usr/share/nginx/html/config.js.template; \
-window.RUNTIME_CONFIG = {
-  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}",
-  SHOW_FOOTER: "${SHOW_FOOTER:-true}",
-  DEBUG_DATETIME: "${DEBUG_DATETIME:-}"
-};
-EOF
-  sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html; \
-  cat <<'EOF' > /docker-entrypoint.sh; \
-#!/bin/sh
-envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js
-exec nginx -g "daemon off;"
-EOF
-  chmod +x /docker-entrypoint.sh
+RUN echo 'window.RUNTIME_CONFIG = {' > /usr/share/nginx/html/config.js.template && \
+    echo '  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}",' >> /usr/share/nginx/html/config.js.template && \
+    echo '  SHOW_FOOTER: "${SHOW_FOOTER:-true}",' >> /usr/share/nginx/html/config.js.template && \
+    echo '  DEBUG_DATETIME: "${DEBUG_DATETIME:-}"' >> /usr/share/nginx/html/config.js.template && \
+    echo '};' >> /usr/share/nginx/html/config.js.template
+
+RUN sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html
+
+RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
+    echo 'envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
+    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh
+
+RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 
