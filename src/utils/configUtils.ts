@@ -1,10 +1,10 @@
-// 実行時設定を一元管理するためのユーティリティ
+// 実行時設定を管理するユーティリティ
 
 // 型定義
 interface RuntimeConfig {
   API_BASE_URL: string;
   SHOW_FOOTER: boolean;
-  DEBUG_DATETIME?: string | null;
+  DEBUG_DATETIME: string | null;
 }
 
 // グローバル定義
@@ -18,13 +18,6 @@ declare global {
   }
 }
 
-// デフォルト値
-const defaultConfig: RuntimeConfig = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
-  SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
-  DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null
-};
-
 // 設定のキャッシュ
 let runtimeConfig: RuntimeConfig | null = null;
 
@@ -35,51 +28,41 @@ export const getConfig = (): RuntimeConfig => {
   if (runtimeConfig !== null) {
     return runtimeConfig;
   }
-  
-  // 実行時設定を初期化
-  runtimeConfig = { ...defaultConfig };
-  
-  // ブラウザ環境で実行時に設定された値があれば上書き
+
+  // デフォルト値
+  runtimeConfig = {
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+    SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
+    DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null
+  };
+
+  // ブラウザ環境で実行時設定があれば上書き
   if (typeof window !== 'undefined' && window.RUNTIME_CONFIG) {
-    if (window.RUNTIME_CONFIG.API_BASE_URL) {
-      runtimeConfig.API_BASE_URL = window.RUNTIME_CONFIG.API_BASE_URL;
+    const { RUNTIME_CONFIG } = window;
+
+    if (RUNTIME_CONFIG.API_BASE_URL) {
+      runtimeConfig.API_BASE_URL = RUNTIME_CONFIG.API_BASE_URL;
     }
-    
-    if (window.RUNTIME_CONFIG.SHOW_FOOTER !== undefined) {
-      runtimeConfig.SHOW_FOOTER = window.RUNTIME_CONFIG.SHOW_FOOTER.toLowerCase() === 'true';
+
+    if (RUNTIME_CONFIG.SHOW_FOOTER !== undefined) {
+      runtimeConfig.SHOW_FOOTER = RUNTIME_CONFIG.SHOW_FOOTER.toLowerCase() === 'true';
     }
-    
-    if (window.RUNTIME_CONFIG.DEBUG_DATETIME) {
-      runtimeConfig.DEBUG_DATETIME = window.RUNTIME_CONFIG.DEBUG_DATETIME;
+
+    if (RUNTIME_CONFIG.DEBUG_DATETIME) {
+      runtimeConfig.DEBUG_DATETIME = RUNTIME_CONFIG.DEBUG_DATETIME;
     }
   }
-  
+
   return runtimeConfig;
 };
 
-/**
- * APIのベースURLを取得する
- */
-export const getApiBaseUrl = (): string => {
-  return getConfig().API_BASE_URL;
-};
+// 便利なアクセサ関数
+export const getApiBaseUrl = (): string => getConfig().API_BASE_URL;
+export const getShowFooter = (): boolean => getConfig().SHOW_FOOTER;
+export const getDebugDatetime = (): string | null => getConfig().DEBUG_DATETIME;
 
 /**
- * フッターの表示設定を取得する
- */
-export const getShowFooter = (): boolean => {
-  return getConfig().SHOW_FOOTER;
-};
-
-/**
- * デバッグ用の日時設定を取得する
- */
-export const getDebugDatetime = (): string | null => {
-  return getConfig().DEBUG_DATETIME || null;
-};
-
-/**
- * 現在時刻を取得する（デバッグモードでは固定時刻を返す）
+ * 現在時刻を取得（デバッグモードでは固定時刻）
  */
 export const getCurrentDateTime = (): Date => {
   const debugDatetime = getDebugDatetime();
@@ -87,7 +70,7 @@ export const getCurrentDateTime = (): Date => {
     try {
       return new Date(debugDatetime);
     } catch (e) {
-      console.warn('無効なデバッグ日時フォーマット:', debugDatetime);
+      console.warn('無効な日時フォーマット:', debugDatetime);
     }
   }
   return new Date();

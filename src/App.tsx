@@ -3,8 +3,8 @@ import "./App.css";
 import TrainBoard from "./TrainBoard";
 import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
 import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
-import { fetchHolidayStatus } from "./utils/timeUtils";
 import { getApiBaseUrl } from "./utils/configUtils";
+import { fetchHolidayStatus } from "./utils/timeUtils";
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
