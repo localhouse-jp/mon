@@ -13,6 +13,7 @@ import {
   TimetableData,
   Train
 } from './types/timetable';
+import { getDebugDatetime, getShowFooter } from './utils/configUtils';
 import {
   calculateRemainingMinutes,
   extractStationName,
@@ -23,12 +24,8 @@ import {
 } from './utils/timeUtils';
 
 // 環境変数からデバッグ日時を取得
-const debugDateTimeString = import.meta.env.VITE_DEBUG_DATETIME;
+const debugDateTimeString = getDebugDatetime();
 const initialDate = debugDateTimeString ? new Date(debugDateTimeString) : new Date();
-
-// フッター表示設定 (デフォルト: 表示)
-const showFooterEnv = import.meta.env.VITE_SHOW_FOOTER;
-const showFooter = showFooterEnv !== 'false' && showFooterEnv !== '0';
 
 interface TrainBoardProps {
   timetableData: TimetableData | null;
@@ -422,7 +419,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         </div>
       )}
       {/* フッター：2行レイアウト */}
-      {showFooter && (
+      {getShowFooter() && (
         <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
           <div className="w-full flex justify-between items-center">
             <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>
