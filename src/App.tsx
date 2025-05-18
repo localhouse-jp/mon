@@ -6,7 +6,7 @@ import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
 import { fetchHolidayStatus } from "./utils/timeUtils";
 
 // APIのベースURLを環境変数から取得
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://app:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api:3000';
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
