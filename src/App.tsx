@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import TrainBoard from "./TrainBoard";
 import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
-import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
+import { createStationsMap, fetchTimetableData, getApiBaseUrl } from "./utils/apiUtils";
 import { fetchHolidayStatus } from "./utils/timeUtils";
 
-// APIのベースURLを環境変数から取得
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api:3000';
+// APIのベースURLを動的に取得するための宣言
+declare global {
+  interface Window {
+    API_BASE_URL?: string;
+  }
+}
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
@@ -58,7 +62,8 @@ function App() {
   // 遅延情報を取得
   const fetchDelayInfo = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/delay`);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/api/delay`);
       if (!response.ok) throw new Error(`APIエラー: ${response.status}`);
       const data: DelayResponse = await response.json();
       console.log('遅延情報取得成功:', data);

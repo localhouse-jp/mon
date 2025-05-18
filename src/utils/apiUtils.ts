@@ -1,12 +1,32 @@
 import { StationDirections, TimetableData } from '../types/timetable';
 
-// APIのベースURLを環境変数から取得
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api:3000';
+// APIのベースURLを保持する変数（実行時に変更可能）
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+/**
+ * APIのベースURLを取得する
+ */
+export const getApiBaseUrl = (): string => {
+  // ブラウザ環境で実行時設定が存在する場合はそちらを優先
+  if (typeof window !== 'undefined' && window.API_BASE_URL) {
+    return window.API_BASE_URL;
+  }
+  return API_BASE_URL;
+};
+
+/**
+ * APIのベースURLを設定する
+ */
+export const setApiBaseUrl = (url: string): void => {
+  API_BASE_URL = url;
+  console.log('API Base URL updated:', url);
+};
 
 /**
  * ネットワークエラーの詳細情報を取得する
  */
 const getDetailedErrorInfo = (error: unknown, url: string): string => {
+  const baseUrl = getApiBaseUrl();
   let errorDetail = `URL: ${url}\n`;
 
   // エラータイプに基づいた詳細情報
@@ -14,7 +34,7 @@ const getDetailedErrorInfo = (error: unknown, url: string): string => {
     errorDetail += 'ネットワーク接続に問題があります。以下を確認してください：\n';
     errorDetail += '- インターネット接続が有効か\n';
     errorDetail += '- APIサーバーが起動しているか\n';
-    errorDetail += `- APIのベースURL(${API_BASE_URL})が正しいか\n`;
+    errorDetail += `- APIのベースURL(${baseUrl})が正しいか\n`;
     errorDetail += '- CORSの設定が適切か\n';
   } else if (error instanceof TypeError) {
     errorDetail += `タイプエラー: ${error.message}\n`;
@@ -32,7 +52,9 @@ const getDetailedErrorInfo = (error: unknown, url: string): string => {
  * /api/all から時刻表データを取得し、不要な八戸ノ里駅前データを除外
  */
 export const fetchTimetableData = async (): Promise<TimetableData> => {
-  const url = `${API_BASE_URL}/api/all`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}/api/all`;
+
   try {
     const res = await fetch(url);
 
@@ -74,7 +96,7 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
-        const busUrl = `${API_BASE_URL}/api/kintetsu-bus/calendar/${yyyy}-${mm}-${dd}`;
+        const busUrl = `${baseUrl}/api/kintetsu-bus/calendar/${yyyy}-${mm}-${dd}`;
         const res2 = await fetch(busUrl);
 
         if (!res2.ok) {
