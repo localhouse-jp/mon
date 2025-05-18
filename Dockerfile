@@ -1,40 +1,39 @@
-# ビルドステージ
-FROM oven/bun:1 as build
+# syntax=docker/dockerfile:1
 
+# ---- Build stage ----
+FROM oven/bun:1 AS build
 WORKDIR /app
 
-# 依存関係をインストール
+# install dependencies
 COPY package.json bun.lockb ./
-RUN bun install
+RUN bun install --frozen-lockfile
 
-# ソースをコピーしてビルド
+# copy source and build
 COPY . .
 RUN bun run build
 
-# 実行ステージ
+# ---- Runtime stage ----
 FROM nginx:alpine
 
-# ビルド成果物をコピー
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# 設定ファイルテンプレートを作成
-RUN echo 'window.RUNTIME_CONFIG = { \
-  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}", \
-  SHOW_FOOTER: "${SHOW_FOOTER:-true}", \
-  DEBUG_DATETIME: "${DEBUG_DATETIME:-}" \
-  };' > /usr/share/nginx/html/config.js.template
-
-# index.htmlにconfig.jsの参照を追加
-RUN sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html
-
-# 起動スクリプトを作成
-RUN echo '#!/bin/sh \
-  envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js \
-  exec nginx -g "daemon off;"' > /docker-entrypoint.sh && \
+# generate runtime config template and entry script
+RUN set -eux; \
+  cat <<'EOF' > /usr/share/nginx/html/config.js.template; \
+window.RUNTIME_CONFIG = {
+  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}",
+  SHOW_FOOTER: "${SHOW_FOOTER:-true}",
+  DEBUG_DATETIME: "${DEBUG_DATETIME:-}"
+};
+EOF
+  sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html; \
+  cat <<'EOF' > /docker-entrypoint.sh; \
+#!/bin/sh
+envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js
+exec nginx -g "daemon off;"
+EOF
   chmod +x /docker-entrypoint.sh
 
-# 80番ポートを公開
 EXPOSE 80
 
-# 起動
 CMD ["/docker-entrypoint.sh"]
