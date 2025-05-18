@@ -1,7 +1,7 @@
 import { StationDirections, TimetableData } from '../types/timetable';
 
 // APIのベースURLを環境変数から取得
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://app:3000';
 
 /**
  * ネットワークエラーの詳細情報を取得する
