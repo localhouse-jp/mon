@@ -2,15 +2,9 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import TrainBoard from "./TrainBoard";
 import { DelayResponse, StationDirections, TimetableData } from "./types/timetable";
-import { createStationsMap, fetchTimetableData, getApiBaseUrl } from "./utils/apiUtils";
+import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
 import { fetchHolidayStatus } from "./utils/timeUtils";
-
-// APIのベースURLを動的に取得するための宣言
-declare global {
-  interface Window {
-    API_BASE_URL?: string;
-  }
-}
+import { getApiBaseUrl } from "./utils/configUtils";
 
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);

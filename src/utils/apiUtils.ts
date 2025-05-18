@@ -1,26 +1,5 @@
 import { StationDirections, TimetableData } from '../types/timetable';
-
-// APIのベースURLを保持する変数（実行時に変更可能）
-let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-/**
- * APIのベースURLを取得する
- */
-export const getApiBaseUrl = (): string => {
-  // ブラウザ環境で実行時設定が存在する場合はそちらを優先
-  if (typeof window !== 'undefined' && window.API_BASE_URL) {
-    return window.API_BASE_URL;
-  }
-  return API_BASE_URL;
-};
-
-/**
- * APIのベースURLを設定する
- */
-export const setApiBaseUrl = (url: string): void => {
-  API_BASE_URL = url;
-  console.log('API Base URL updated:', url);
-};
+import { getApiBaseUrl } from './configUtils';
 
 /**
  * ネットワークエラーの詳細情報を取得する
@@ -28,7 +7,7 @@ export const setApiBaseUrl = (url: string): void => {
 const getDetailedErrorInfo = (error: unknown, url: string): string => {
   const baseUrl = getApiBaseUrl();
   let errorDetail = `URL: ${url}\n`;
-
+  
   // エラータイプに基づいた詳細情報
   if (error instanceof TypeError && error.message === 'Failed to fetch') {
     errorDetail += 'ネットワーク接続に問題があります。以下を確認してください：\n';
@@ -44,7 +23,7 @@ const getDetailedErrorInfo = (error: unknown, url: string): string => {
       errorDetail += `スタックトレース: ${error.stack}\n`;
     }
   }
-
+  
   return errorDetail;
 };
 
@@ -54,14 +33,14 @@ const getDetailedErrorInfo = (error: unknown, url: string): string => {
 export const fetchTimetableData = async (): Promise<TimetableData> => {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}/api/all`;
-
+  
   try {
     const res = await fetch(url);
-
+    
     if (!res.ok) {
       // HTTPエラーの詳細情報
       let errorMsg = `APIエラー: ${res.status} ${res.statusText}`;
-
+      
       try {
         // レスポンスボディがJSONならそれも表示
         const errorBody = await res.text();
@@ -75,11 +54,11 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
             errorMsg += `\nレスポンス: ${errorBody}`;
           }
         }
-      } catch { } // レスポンスボディの取得に失敗しても続行
-
+      } catch {} // レスポンスボディの取得に失敗しても続行
+      
       throw new Error(errorMsg);
     }
-
+    
     const data: TimetableData = await res.json();
 
     // 近鉄バスの八戸ノ里駅前を除外
@@ -98,7 +77,7 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
         const dd = String(today.getDate()).padStart(2, '0');
         const busUrl = `${baseUrl}/api/kintetsu-bus/calendar/${yyyy}-${mm}-${dd}`;
         const res2 = await fetch(busUrl);
-
+        
         if (!res2.ok) {
           console.warn(`バス時刻表の取得に失敗: ${res2.status} ${res2.statusText}`);
         } else {
@@ -113,13 +92,13 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
     // 詳細なエラー情報を含めてエラーを投げる
     const detailedError = getDetailedErrorInfo(error, url);
     console.error('APIフェッチ中にエラーが発生:', detailedError);
-
+    
     // オリジナルのエラーメッセージに詳細情報を追加
     if (error instanceof Error) {
       error.message = `${error.message}\n\n詳細情報:\n${detailedError}`;
       throw error;
     }
-
+    
     throw new Error(`APIフェッチエラー\n\n詳細情報:\n${detailedError}`);
   }
 };
