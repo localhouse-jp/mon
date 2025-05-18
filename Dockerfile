@@ -15,20 +15,28 @@ RUN bun run build
 # ---- Runtime stage ----
 FROM nginx:alpine
 
+# install envsubst
+RUN apk add --no-cache gettext
+
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # generate runtime config template and entry script
 RUN echo 'window.RUNTIME_CONFIG = {' > /usr/share/nginx/html/config.js.template && \
-    echo '  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}",' >> /usr/share/nginx/html/config.js.template && \
-    echo '  SHOW_FOOTER: "${SHOW_FOOTER:-true}",' >> /usr/share/nginx/html/config.js.template && \
-    echo '  DEBUG_DATETIME: "${DEBUG_DATETIME:-}"' >> /usr/share/nginx/html/config.js.template && \
-    echo '};' >> /usr/share/nginx/html/config.js.template
+  echo '  API_BASE_URL: "${API_BASE_URL:-http://localhost:3000}",' >> /usr/share/nginx/html/config.js.template && \
+  echo '  SHOW_FOOTER: "${SHOW_FOOTER:-true}",' >> /usr/share/nginx/html/config.js.template && \
+  echo '  DEBUG_DATETIME: "${DEBUG_DATETIME:-}"' >> /usr/share/nginx/html/config.js.template && \
+  echo '};' >> /usr/share/nginx/html/config.js.template
 
 RUN sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html
 
+# Create a more robust entrypoint script
 RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh
+  echo 'set -e' >> /docker-entrypoint.sh && \
+  echo 'echo "Generating config.js with API_BASE_URL=${API_BASE_URL:-http://localhost:3000}"' >> /docker-entrypoint.sh && \
+  echo 'envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
+  echo 'cat /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
+  echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
+  echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh
 
 RUN chmod +x /docker-entrypoint.sh
 
