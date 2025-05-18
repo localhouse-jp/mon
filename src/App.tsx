@@ -5,6 +5,9 @@ import { DelayResponse, StationDirections, TimetableData } from "./types/timetab
 import { createStationsMap, fetchTimetableData } from "./utils/apiUtils";
 import { fetchHolidayStatus } from "./utils/timeUtils";
 
+// APIのベースURLを環境変数から取得
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 function App() {
   const [timetableData, setTimetableData] = useState<TimetableData | null>(null);
   const [stationsMap, setStationsMap] = useState<Map<string, StationDirections>>(new Map());
@@ -55,7 +58,7 @@ function App() {
   // 遅延情報を取得
   const fetchDelayInfo = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/delay');
+      const response = await fetch(`${API_BASE_URL}/api/delay`);
       if (!response.ok) throw new Error(`APIエラー: ${response.status}`);
       const data: DelayResponse = await response.json();
       console.log('遅延情報取得成功:', data);
