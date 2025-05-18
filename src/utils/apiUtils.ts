@@ -1,10 +1,13 @@
 import { StationDirections, TimetableData } from '../types/timetable';
 
+// APIのベースURLを環境変数から取得
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 /**
  * /api/all から時刻表データを取得し、不要な八戸ノ里駅前データを除外
  */
 export const fetchTimetableData = async (): Promise<TimetableData> => {
-  const res = await fetch('http://localhost:3000/api/all');
+  const res = await fetch(`${API_BASE_URL}/api/all`);
   if (!res.ok) throw new Error(`APIエラー: ${res.status}`);
   const data: TimetableData = await res.json();
 
@@ -22,7 +25,7 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      const res2 = await fetch(`http://localhost:3000/api/kintetsu-bus/calendar/${yyyy}-${mm}-${dd}`);
+      const res2 = await fetch(`${API_BASE_URL}/api/kintetsu-bus/calendar/${yyyy}-${mm}-${dd}`);
       if (res2.ok) data.kintetsuBus = await res2.json();
     } catch { }
   }
