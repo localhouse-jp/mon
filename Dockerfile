@@ -1,70 +1,46 @@
 # syntax=docker/dockerfile:1
 
-# ビルド時の引数
-ARG API_BASE_URL=http://localhost:3000
-ARG SHOW_FOOTER=true
-ARG DEBUG_DATETIME=
-
-# ---- Build stage ----
-FROM oven/bun:1 AS build
+# ----- Build Stage -----
+FROM ghcr.io/tauri-apps/builder:latest AS build
 WORKDIR /app
 
-# ビルド引数を受け取る
-ARG API_BASE_URL
-ARG SHOW_FOOTER
-ARG DEBUG_DATETIME
+# install bun for frontend build
+RUN npm install -g bun
 
-# ビルド環境変数を設定
-ENV VITE_API_BASE_URL=${API_BASE_URL}
-ENV VITE_SHOW_FOOTER=${SHOW_FOOTER}
-ENV VITE_DEBUG_DATETIME=${DEBUG_DATETIME}
+# install Rust toolchain (provided by builder image) and Tauri CLI
+RUN cargo install tauri-cli --locked
 
-# install dependencies
+# install dependencies and build frontend
 COPY package.json bun.lockb ./
 RUN bun install --frozen-lockfile
 
-# copy source and build
+# copy sources
 COPY . .
+
+# build frontend assets
 RUN bun run build
 
-# ---- Runtime stage ----
-FROM nginx:alpine
+# build tauri binary
+RUN cargo build --release --manifest-path src-tauri/Cargo.toml
 
-# ビルド引数を受け取る
-ARG API_BASE_URL
-ARG SHOW_FOOTER
-ARG DEBUG_DATETIME
+# ----- Runtime Stage -----
+FROM ubuntu:22.04 AS runtime
 
-# 実行時のデフォルト環境変数を設定
-ENV API_BASE_URL=${API_BASE_URL}
-ENV SHOW_FOOTER=${SHOW_FOOTER}
-ENV DEBUG_DATETIME=${DEBUG_DATETIME}
+# install libraries required to run tauri and X11 utilities
+RUN apt-get update && apt-get install -y \
+    libwebkit2gtk-4.1-0 \
+    libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 libxi6 \
+    libgtk-3-0 libayatana-appindicator3-1 librsvg2-2 \
+    xauth x11-xserver-utils xinput xrandr && \
+    rm -rf /var/lib/apt/lists/*
 
-# install envsubst
-RUN apk add --no-cache gettext
+WORKDIR /app
 
-COPY --from=build /app/dist /usr/share/nginx/html
+# copy the built binary
+COPY --from=build /app/src-tauri/target/release/tauri-app ./tauri-app
 
-# generate runtime config template and entry script
-RUN echo 'window.RUNTIME_CONFIG = {' > /usr/share/nginx/html/config.js.template && \
-  echo '  API_BASE_URL: "${API_BASE_URL}",' >> /usr/share/nginx/html/config.js.template && \
-  echo '  SHOW_FOOTER: "${SHOW_FOOTER}",' >> /usr/share/nginx/html/config.js.template && \
-  echo '  DEBUG_DATETIME: "${DEBUG_DATETIME}"' >> /usr/share/nginx/html/config.js.template && \
-  echo '};' >> /usr/share/nginx/html/config.js.template
+# add entry script
+COPY x11-entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN sed -i '/<\/head>/i \    <script src="/config.js"></script>' /usr/share/nginx/html/index.html
-
-# Create a more robust entrypoint script
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-  echo 'set -e' >> /docker-entrypoint.sh && \
-  echo 'echo "Generating config.js with API_BASE_URL=${API_BASE_URL}"' >> /docker-entrypoint.sh && \
-  echo 'envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
-  echo 'cat /usr/share/nginx/html/config.js' >> /docker-entrypoint.sh && \
-  echo 'echo "Starting nginx..."' >> /docker-entrypoint.sh && \
-  echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh
-
-RUN chmod +x /docker-entrypoint.sh
-
-EXPOSE 80
-
-CMD ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
