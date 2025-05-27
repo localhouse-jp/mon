@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # ----- Build Stage -----
-FROM ghcr.io/tauri-apps/builder:latest AS build
+# Use Docker Hub mirror of the Tauri builder image to avoid authentication
+# issues when pulling from GitHub Container Registry on remote builders.
+FROM tauri-apps/builder:latest AS build
 WORKDIR /app
 
 # install bun for frontend build
