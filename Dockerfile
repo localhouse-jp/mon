@@ -1,15 +1,35 @@
 # syntax=docker/dockerfile:1
 
 # ----- Build Stage -----
-# Use Docker Hub mirror of the Tauri builder image to avoid authentication
-# issues when pulling from GitHub Container Registry on remote builders.
-FROM websmurf/tauri-builder:1.1.0 AS build
+# Use Ubuntu base image and install Rust and Node.js dependencies
+FROM ubuntu:22.04 AS build
 WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    build-essential \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    libwebkit2gtk-4.1-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Node.js via NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 
 # install bun for frontend build
 RUN npm install -g bun
 
-# install Rust toolchain (provided by builder image) and Tauri CLI
+# install Tauri CLI
 RUN cargo install tauri-cli --locked
 
 # install dependencies and build frontend
