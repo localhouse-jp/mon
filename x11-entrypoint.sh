@@ -7,7 +7,7 @@ echo "----- End of List --------"
 function reverse_window_coordinates () {
   local INPUT=$1
 
-  IFS=', ' read -a coords <<< $INPUT
+  IFS=', ' read -a coords <<< "$INPUT"
   if [ ${#coords[@]} -eq 2 ]; then
     echo "${coords[1]},${coords[0]}"
   else
@@ -53,7 +53,7 @@ if [[ ! -z "$ROTATE_DISPLAY" ]]; then
     echo "Reversed window size: $WINDOW_SIZE"
     
     #window position, if set
-    if [[ "$WINDOW_POSITION" -ne "0,0" ]]
+    if [[ "$WINDOW_POSITION" != "0,0" ]]
     then
       REVERSED_POSITION="$(reverse_window_coordinates $WINDOW_POSITION)"
       export WINDOW_POSITION=$REVERSED_POSITION
