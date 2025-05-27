@@ -5,6 +5,7 @@ interface RuntimeConfig {
   API_BASE_URL: string;
   SHOW_FOOTER: boolean;
   DEBUG_DATETIME: string | null;
+  WINDOW_SCALE: number;
 }
 
 // グローバル定義
@@ -14,6 +15,7 @@ declare global {
       API_BASE_URL?: string;
       SHOW_FOOTER?: string;
       DEBUG_DATETIME?: string;
+      WINDOW_SCALE?: string;
     };
   }
 }
@@ -33,7 +35,8 @@ export const getConfig = (): RuntimeConfig => {
   runtimeConfig = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
     SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
-    DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null
+    DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null,
+    WINDOW_SCALE: Number(import.meta.env.VITE_WINDOW_SCALE) || 2
   };
 
   // ブラウザ環境で実行時設定があれば上書き
@@ -51,6 +54,13 @@ export const getConfig = (): RuntimeConfig => {
     if (RUNTIME_CONFIG.DEBUG_DATETIME) {
       runtimeConfig.DEBUG_DATETIME = RUNTIME_CONFIG.DEBUG_DATETIME;
     }
+
+    if (RUNTIME_CONFIG.WINDOW_SCALE) {
+      const scale = Number(RUNTIME_CONFIG.WINDOW_SCALE);
+      if (!isNaN(scale) && scale > 0) {
+        runtimeConfig.WINDOW_SCALE = scale;
+      }
+    }
   }
 
   return runtimeConfig;
@@ -60,6 +70,7 @@ export const getConfig = (): RuntimeConfig => {
 export const getApiBaseUrl = (): string => getConfig().API_BASE_URL;
 export const getShowFooter = (): boolean => getConfig().SHOW_FOOTER;
 export const getDebugDatetime = (): string | null => getConfig().DEBUG_DATETIME;
+export const getWindowScale = (): number => getConfig().WINDOW_SCALE;
 
 /**
  * 現在時刻を取得（デバッグモードでは固定時刻）
