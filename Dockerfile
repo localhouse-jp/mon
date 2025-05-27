@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y \
     libwebkit2gtk-4.1-0 \
     libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxrandr2 libxi6 \
     libgtk-3-0 libayatana-appindicator3-1 librsvg2-2 \
-    xauth x11-xserver-utils xinput xrandr && \
+    xauth x11-xserver-utils xinput && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
