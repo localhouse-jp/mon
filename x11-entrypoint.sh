@@ -7,7 +7,7 @@ echo "----- End of List --------"
 function reverse_window_coordinates () {
   local INPUT=$1
 
-  IFS=', ' read -a coords <<< $INPUT
+  IFS=', ' read -a coords <<< "$INPUT"
   if [ ${#coords[@]} -eq 2 ]; then
     echo "${coords[1]},${coords[0]}"
   else
