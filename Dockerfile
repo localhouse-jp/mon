@@ -3,7 +3,7 @@
 # ----- Build Stage -----
 # Use Docker Hub mirror of the Tauri builder image to avoid authentication
 # issues when pulling from GitHub Container Registry on remote builders.
-FROM websmurf/tauri-builder:latest AS build
+FROM websmurf/tauri-builder:1.1.0 AS build
 WORKDIR /app
 
 # install bun for frontend build
