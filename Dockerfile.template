@@ -1,0 +1,66 @@
+# syntax=docker/dockerfile:1.4
+ARG RUST_VERSION=1.87.0
+ARG DEBIAN_SUITE=bookworm
+ARG TARGET_TRIPLE=aarch64-unknown-linux-gnu
+ARG BUN_VERSION=latest
+
+FROM --platform=linux/arm64 rust:${RUST_VERSION}-slim-${DEBIAN_SUITE} AS build
+
+ARG TARGET_TRIPLE
+ARG BUN_VERSION
+
+RUN rustup target add ${TARGET_TRIPLE}
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      build-essential pkg-config curl wget unzip \
+      libssl-dev libgtk-3-dev libwebkit2gtk-4.1-dev \
+      libsoup-3.0-dev libayatana-appindicator3-dev librsvg2-dev \
+      gnupg2 ca-certificates nodejs npm tree \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN if [ "${BUN_VERSION}" = "latest" ]; then \
+      curl -fsSL https://bun.sh/install | bash; \
+    else \
+      curl -fsSL https://bun.sh/install | bash -s "bun-v${BUN_VERSION}"; \
+    fi
+
+ENV PATH="/root/.bun/bin:${PATH}"
+
+WORKDIR /app
+
+COPY package.json ./
+
+RUN bun install
+
+COPY . .
+RUN rm -rf node_modules && bun install
+RUN bunx tauri build
+
+FROM --platform=linux/arm64 balenalib/%%BALENA_MACHINE_NAME%%-debian:${DEBIAN_SUITE} AS runtime
+
+ARG TARGET_TRIPLE
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      xserver-xorg-core xserver-xorg-video-fbdev \
+      xserver-xorg-input-evdev x11-xserver-utils x11-utils \
+      xinit xauth libgtk-3-0 libwebkit2gtk-4.1-0 \
+      libsoup-3.0-0 libayatana-appindicator3-1 \
+      librsvg2-2 libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV DISPLAY=:0 \
+    UDEV=1 \
+    WEBKIT_DISABLE_COMPOSITING_MODE=1 \
+    WEBKIT_DISABLE_DMABUF_RENDERER=1
+
+WORKDIR /usr/src/app
+
+COPY --from=build /app/src-tauri/target/release/tauri-app ./tauri-app
+COPY xorg.conf /etc/X11/xorg.conf
+COPY start.sh /start.sh
+
+RUN chmod +x /start.sh
+
+CMD ["/start.sh"]
