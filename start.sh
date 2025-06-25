@@ -1,5 +1,8 @@
 cat > ~/.xinitrc << 'EOF'
 export GDK_SCALE=$WINDOW_SCALE
+xset s noblank
+xset s off
+xset -dpms
 openbox &
 "$(pwd)/tauri-app" &
 sleep 2
@@ -8,10 +11,6 @@ wmctrl -i -r $WIN_ID -b add,fullscreen
 unclutter -idle 0 -root &
 wait
 EOF
-
-xset s noblank
-xset s off
-xset -dpms
 
 ROT=${ROTATE_DISPLAY:-right}
 case "$ROT" in
