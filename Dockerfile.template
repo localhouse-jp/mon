@@ -44,8 +44,9 @@ ARG TARGET_TRIPLE
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       xserver-xorg-core xserver-xorg-video-fbdev \
+      openbox wmctrl unclutter \
       xserver-xorg-input-evdev x11-xserver-utils x11-utils \
-      xinit xauth libgtk-3-0 libwebkit2gtk-4.1-0 \
+      xinit xauth xinput libgtk-3-0 libwebkit2gtk-4.1-0 \
       libsoup-3.0-0 libayatana-appindicator3-1 \
       librsvg2-2 libssl3 \
     && rm -rf /var/lib/apt/lists/*
