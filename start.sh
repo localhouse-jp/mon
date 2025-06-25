@@ -10,6 +10,8 @@ wait
 EOF
 
 xset s noblank
+xset s off
+xset -dpms
 
 ROT=${ROTATE_DISPLAY:-right}
 case "$ROT" in
