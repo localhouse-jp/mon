@@ -38,7 +38,7 @@ pub fn run() {
     let api_config = ApiConfig {
         // 環境変数から初期値を取得するか、デフォルト値を設定
         base_url: Mutex::new(
-            std::env::var("API_BASE_URL").unwrap_or_else(|_| "http://localhost:3000".to_string()),
+            std::env::var("API_BASE_URL").unwrap_or_else(|_| "http://api:3000".to_string()),
         ),
     };
 

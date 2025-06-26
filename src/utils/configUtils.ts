@@ -33,7 +33,7 @@ export const getConfig = (): RuntimeConfig => {
 
   // デフォルト値
   runtimeConfig = {
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://api:3000',
     SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
     DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null,
     WINDOW_SCALE: Number(import.meta.env.VITE_WINDOW_SCALE) || 2
