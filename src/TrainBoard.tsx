@@ -11,6 +11,7 @@ import {
   STATION_LAYOUT,
   StationDirections,
   TimetableData,
+  TodayForecast,
   Train
 } from './types/timetable';
 import { getDebugDatetime, getShowFooter } from './utils/configUtils';
@@ -22,6 +23,7 @@ import {
   formatTime,
   getLineColor
 } from './utils/timeUtils';
+import { fetchTodayForecast, getWeatherEmoji } from './utils/weatherUtils';
 
 // 環境変数からデバッグ日時を取得
 const debugDateTimeString = getDebugDatetime();
@@ -53,6 +55,8 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 }) => {
   // 現在時刻の状態管理 - 初期値を環境変数または現在時刻に設定
   const [now, setNow] = useState<Date>(initialDate);
+  // 天気情報の状態管理
+  const [todayForecast, setTodayForecast] = useState<TodayForecast | null>(null);
 
   // 時刻を更新する間隔を設定 (デバッグ時は更新しないようにする)
   useEffect(() => {
@@ -62,6 +66,20 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       return () => clearInterval(timer);
     }
   }, [debugDateTimeString]);
+
+  // 天気情報を取得
+  useEffect(() => {
+    const loadWeather = async () => {
+      const weatherData = await fetchTodayForecast();
+      setTodayForecast(weatherData);
+    };
+
+    loadWeather();
+
+    // 10分ごとに天気情報を更新
+    const weatherTimer = setInterval(loadWeather, 10 * 60 * 1000);
+    return () => clearInterval(weatherTimer);
+  }, []);
 
   // 列車が現在時刻以降かどうかを判断する関数
   const isTrainUpcoming = useCallback((hour: string | number, minute: string | number): boolean => {
@@ -314,7 +332,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
 
   return (
     <div className="w-screen h-screen flex flex-col bg-gray-900 text-white font-sans overflow-hidden">
-      {/* ヘッダー：日付＋現在時刻 */}
+      {/* ヘッダー：日付＋現在時刻＋天気情報 */}
       <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
         <div className="flex flex-col">
           <div className="text-xl font-bold">{formatDate(now)}</div>
@@ -322,6 +340,28 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
             {isHoliday ? `休日ダイヤ${holidayName ? ` (${holidayName})` : ''}` : '平日ダイヤ'}
           </div>
         </div>
+
+        {/* 中央：今日の全天気予報 */}
+        <div className="flex items-center space-x-1">
+          {todayForecast && todayForecast.forecasts.length > 0 ? (
+            todayForecast.forecasts.map((forecast, idx) => (
+              <div
+                key={idx}
+                className={`flex items-center space-x-2 px-1 py-1 rounded ${forecast.time === todayForecast.current.time
+                  ? 'bg-gray-600 ring-1 ring-blue-400'
+                  : 'bg-gray-700'
+                  }`}
+              >
+                <div className="text-sm text-gray-300 min-w-[2.5rem]">{forecast.time}</div>
+                <div className="text-2xl">{getWeatherEmoji(forecast.icon)}</div>
+                <div className="text-lg font-bold text-white min-w-[3rem]">{forecast.temp}℃</div>
+              </div>
+            ))
+          ) : (
+            <div className="text-base text-gray-400">天気情報取得中...</div>
+          )}
+        </div>
+
         <div className="flex flex-col items-end">
           <div className="text-3xl font-extrabold text-white font-mono">{now.toLocaleTimeString('ja-JP', { hour12: false })}</div>
         </div>

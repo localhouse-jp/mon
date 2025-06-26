@@ -120,3 +120,66 @@ export const BUS_ROUTES = {
     routes: ["八戸ノ里駅前→近畿大学東門前", "近畿大学東門前→八戸ノ里駅前"]
   }
 };
+
+// 天気情報の型定義
+export interface WeatherInfo {
+  id: number;
+  main: string;
+  description: string;
+  icon: string;
+}
+
+export interface WeatherMain {
+  temp: number;
+  temp_max: number;
+  temp_min: number;
+  humidity: number;
+}
+
+export interface WeatherWind {
+  speed: number;
+}
+
+export interface WeatherForecastItem {
+  dt: number;
+  dt_txt: string;
+  main: WeatherMain;
+  weather: WeatherInfo[];
+  wind: WeatherWind;
+}
+
+export interface WeatherResponse {
+  cod: string;
+  message: number;
+  cnt: number;
+  list: WeatherForecastItem[];
+  city: {
+    id: number;
+    name: string;
+    coord: {
+      lat: number;
+      lon: number;
+    };
+    country: string;
+  };
+}
+
+export interface CurrentWeather {
+  temp: number;
+  description: string;
+  icon: string;
+  time: string;
+}
+
+export interface TodayForecast {
+  current: CurrentWeather;
+  forecasts: {
+    time: string;
+    temp: number;
+    description: string;
+    icon: string;
+    humidity: number;
+    windSpeed: number;
+  }[];
+  city: string;
+}

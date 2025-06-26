@@ -33,6 +33,22 @@ fn get_api_base_url(api_config: State<ApiConfig>) -> Result<String, String> {
     Ok(base_url.clone())
 }
 
+// 環境変数を取得するコマンド
+#[tauri::command]
+fn get_env_var(key: String) -> Option<String> {
+    std::env::var(key).ok()
+}
+
+// 複数の環境変数を一度に取得するコマンド
+#[tauri::command]
+fn get_env_vars(keys: Vec<String>) -> std::collections::HashMap<String, Option<String>> {
+    let mut result = std::collections::HashMap::new();
+    for key in keys {
+        result.insert(key.clone(), std::env::var(key).ok());
+    }
+    result
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let api_config = ApiConfig {
@@ -48,7 +64,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             set_api_base_url,
-            get_api_base_url
+            get_api_base_url,
+            get_env_var,
+            get_env_vars
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
