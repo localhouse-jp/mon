@@ -317,7 +317,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       {/* ヘッダー：日付＋現在時刻 */}
       <header className="flex justify-between items-center px-6 py-4 bg-gray-800 shadow-md">
         <div className="flex flex-col">
-          <div className="text-xl font-bold font-mono">{formatDate(now)}</div>
+          <div className="text-xl font-bold">{formatDate(now)}</div>
           <div className="text-xs text-amber-400">
             {isHoliday ? `休日ダイヤ${holidayName ? ` (${holidayName})` : ''}` : '平日ダイヤ'}
           </div>
@@ -420,15 +420,15 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
       )}
       {/* フッター：2行レイアウト */}
       {getShowFooter() && (
-        <footer className="bg-gray-800 font-mono text-gray-500 text-sm p-4 h-24">
+        <footer className="bg-gray-800 text-gray-500 text-sm p-4 h-24">
           <div className="w-full flex justify-between items-center">
             <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>
-              <span>
+              <span className="font-sans">
                 {timetableData?.lastUpdated
                   ? `最終更新: ${new Date(timetableData.lastUpdated).toLocaleString('ja-JP')}`
                   : `最終更新: ${now.toLocaleString('ja-JP')}`}
               </span>
-              <span className="text-xs text-gray-400">LOCALHOUSE / https://localhouse.jp</span>
+              <span className="text-xs text-gray-400 font-mono">LOCALHOUSE / https://localhouse.jp</span>
             </div>
             <div className="flex items-center space-x-4 absolute right-4 bottom-4">
               <img src={localhouseLogo} alt="Localhouse" className="h-16" />
