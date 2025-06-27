@@ -21,7 +21,6 @@ const RemainingTime: React.FC<RemainingTimeProps> = ({
 
   // ハイライト用のスタイル
   const highlightStyle = isAlmostTime ? {
-    // backgroundColor: 'rgba(252, 211, 77, 0.3)',
     borderRadius: '4px',
     padding: '4px 8px'
   } : {};
