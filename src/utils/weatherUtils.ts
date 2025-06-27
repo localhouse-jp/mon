@@ -1,4 +1,4 @@
-import { CurrentWeather, WeatherResponse, TodayForecast } from '../types/timetable';
+import { CurrentWeather, TodayForecast, WeatherResponse } from '../types/timetable';
 import { getWeatherConfig } from './envUtils';
 
 // 動的にエンドポイントを構築する関数
@@ -8,7 +8,7 @@ async function buildWeatherEndpoint(): Promise<string | null> {
     console.error('天気API設定が取得できませんでした');
     return null;
   }
-  
+
   return `http://api.openweathermap.org/data/2.5/forecast?zip=${config.zipCode},${config.countryCode}&appid=${config.apiKey}&units=metric&lang=ja`;
 }
 
@@ -50,27 +50,40 @@ export async function fetchTodayForecast(): Promise<TodayForecast | null> {
       return null;
     }
 
-    // 現在時刻に最も近い予報を取得
+    // 現在時刻以降の予報のみを取得
     const now = new Date();
     const currentHour = now.getHours();
-    
-    const currentForecast = todayList.find(item => {
-      const forecastHour = parseInt(item.dt_txt.slice(11, 13));
-      return forecastHour >= currentHour;
-    }) || todayList[todayList.length - 1];
+    const currentMinute = now.getMinutes();
 
-    if (!currentForecast) {
+    const upcomingForecasts = todayList.filter(item => {
+      const forecastHour = parseInt(item.dt_txt.slice(11, 13));
+      const forecastMinute = parseInt(item.dt_txt.slice(14, 16));
+
+      // 現在時刻以降の予報のみを含める
+      return forecastHour > currentHour ||
+        (forecastHour === currentHour && forecastMinute >= currentMinute);
+    });
+
+    // 現在時刻以降の予報がない場合は、今日の最後の予報を使用
+    const availableForecasts = upcomingForecasts.length > 0 ? upcomingForecasts : [todayList[todayList.length - 1]];
+
+    // 最大3つまでに制限
+    const limitedForecasts = availableForecasts.slice(0, 3);
+
+    if (limitedForecasts.length === 0) {
       return null;
     }
 
+    // 現在時刻に最も近い予報を取得（表示用）
+    const currentForecast = limitedForecasts[0];
     const currentWeather = currentForecast.weather[0];
     const currentTime = currentForecast.dt_txt.slice(11, 16);
 
-    // 今日の全予報データを変換
-    const forecasts = todayList.map(item => {
+    // 予報データを変換（最大4つ）
+    const forecasts = limitedForecasts.map(item => {
       const weather = item.weather[0];
       const time = item.dt_txt.slice(11, 16);
-      
+
       return {
         time: time,
         temp: Math.round(item.main.temp),
@@ -127,7 +140,7 @@ export async function fetchCurrentWeather(): Promise<CurrentWeather | null> {
     // 現在時刻に最も近い予報を取得
     const now = new Date();
     const currentHour = now.getHours();
-    
+
     // 現在時刻以降の最初の予報、または今日の最後の予報を取得
     const currentForecast = todayList.find(item => {
       const forecastHour = parseInt(item.dt_txt.slice(11, 13));
@@ -178,6 +191,6 @@ export function getWeatherEmoji(iconCode: string): string {
     '50d': '🌫️', // mist
     '50n': '🌫️', // mist
   };
-  
+
   return iconMap[iconCode] || '🌤️';
 }
