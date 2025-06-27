@@ -55,10 +55,10 @@ export const calculateRemainingMinutes = (
 /**
  * 残り時間を表示形式にフォーマットする
  * @param minutes 残り分数
- * @returns フォーマットされた残り時間文字列 (例: "5 分")
+ * @returns フォーマットされた残り時間文字列 (例: "5分後")
  */
 export const formatRemainingTime = (minutes: number): string => {
-  return `${minutes} 分`;
+  return `${minutes}分後`;
 };
 
 /**

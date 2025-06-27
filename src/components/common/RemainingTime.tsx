@@ -8,7 +8,7 @@ export interface RemainingTimeProps {
 
 /**
  * 残り時間を表示するコンポーネント
- * - format: 'default'（あと○○分）または 'compact'（○○分）
+ * - format: 'default'（○○分後）または 'compact'（○○分後）
  * - threshold: この分数以下でハイライト表示（デフォルト: 20分）
  */
 const RemainingTime: React.FC<RemainingTimeProps> = ({
@@ -27,8 +27,8 @@ const RemainingTime: React.FC<RemainingTimeProps> = ({
 
   // 表示用テキストのフォーマット
   const displayText = format === 'default'
-    ? `（あと${minutes}分）`
-    : `${minutes} 分前`;
+    ? `（${minutes}分後）`
+    : `${minutes}分後`;
 
   return (
     <span
