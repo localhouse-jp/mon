@@ -11,6 +11,7 @@ LocalHouse is a cross-platform desktop application for displaying real-time publ
 - 🚃 Real-time train/bus departure information with countdown timers
 - ⏱️ Updates every second for accurate remaining time
 - 📅 Japanese holiday support for schedule adjustments
+- 🌤️ Weather information display with temperature and conditions
 - 🖥️ Fullscreen kiosk mode for digital signage
 - 🔄 Auto-refresh data every 5 minutes
 - 🎯 Display sleep prevention for always-on displays
@@ -18,8 +19,8 @@ LocalHouse is a cross-platform desktop application for displaying real-time publ
 ## Development Commands
 
 ```bash
-# Install dependencies (using Bun or npm)
-bun install  # or npm install
+# Install dependencies (using Bun)
+bun install
 
 # Development
 bun dev           # Frontend only (Vite dev server on port 1420)
@@ -45,9 +46,11 @@ bun preview
 - `App.tsx`: Main component handling data fetching and state management
 - `TrainBoard.tsx`: Primary display component for transit information
 - `components/`: Reusable UI components (BusItem, StationCard, StatusScreens)
+- `components/common/RemainingTime.tsx`: Displays remaining time with highlighting for departures soon
 - `utils/apiUtils.ts`: API communication layer
 - `utils/timeUtils.ts`: Time calculations and countdown logic
 - `utils/configUtils.ts`: Environment configuration management
+- `utils/weatherUtils.ts`: Weather data fetching and emoji display logic
 
 ### Backend (Tauri)
 - Rust-based native application wrapper
@@ -62,6 +65,7 @@ bun preview
 4. Updates every second for accurate remaining time
 5. Integrates Japanese holiday data from `public/syukujitsu.csv`
 6. Fetches delay information from API `/api/delay` endpoint
+7. Fetches weather data from OpenWeatherMap API (requires `VITE_OPEN_WEATHER_MAP_API_KEY`)
 
 ### State Management
 - Local React state with hooks (no external state management library)
@@ -75,6 +79,9 @@ Create `.env` and `.env.development` files:
 ```bash
 # API endpoint
 VITE_API_BASE_URL=http://localhost:3000
+
+# Weather API
+VITE_OPEN_WEATHER_MAP_API_KEY=your_api_key_here
 
 # UI options
 VITE_SHOW_FOOTER=true
