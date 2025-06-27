@@ -17,11 +17,11 @@ const RemainingTime: React.FC<RemainingTimeProps> = ({
   threshold = 20
 }) => {
   // 残り時間が閾値以下かどうかを判定
-  const isAlmostTime = minutes <= threshold && minutes > 0;
+  const isAlmostTime = minutes <= threshold && minutes >= 0;
 
   // ハイライト用のスタイル
   const highlightStyle = isAlmostTime ? {
-    backgroundColor: 'rgba(252, 211, 77, 0.3)',
+    // backgroundColor: 'rgba(252, 211, 77, 0.3)',
     borderRadius: '4px',
     padding: '4px 8px'
   } : {};
@@ -29,11 +29,11 @@ const RemainingTime: React.FC<RemainingTimeProps> = ({
   // 表示用テキストのフォーマット
   const displayText = format === 'default'
     ? `（あと${minutes}分）`
-    : `${minutes} 分`;
+    : `${minutes} 分前`;
 
   return (
     <span
-      className={`${isAlmostTime ? 'text-yellow-400 font-bold' : 'text-gray-400'}`}
+      className={`${isAlmostTime ? 'bg-yellow-300 text-black font-bold' : 'text-gray-400'}`}
       style={highlightStyle}
     >
       {displayText}
