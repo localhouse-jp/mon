@@ -1,0 +1,417 @@
+openapi: 3.1.0
+info:
+  title: 鉄道・バス時刻表API
+  description: JR・近鉄の鉄道時刻表と近鉄バスの時刻表データを提供するAPI
+  version: 1.1.0
+servers:
+  - url: http://localhost:3000
+    description: 開発サーバー
+
+paths:
+  /api/kintetsu:
+    get:
+      summary: 近鉄の時刻表データを取得
+      description: 近鉄の時刻表データを取得します。データは1時間ごとに更新されます。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 近鉄の時刻表データ
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '近鉄のデータを取得できませんでした'
+
+  /api/jr:
+    get:
+      summary: JRの時刻表データを取得
+      description: JRの時刻表データを取得します。データは1時間ごとに更新されます。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                description: JRの時刻表データ
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'JRのデータを取得できませんでした'
+
+  /api/kintetsu-bus:
+    get:
+      summary: 近鉄バスの時刻表データを取得
+      description: 近鉄バスの時刻表データを取得します。データは事前に解析されたものを提供します。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 近鉄バスの時刻表データ
+
+  /api/kintetsu-bus/calendar/{date}:
+    get:
+      summary: 指定日の近鉄バス運行情報を取得
+      description: 指定された日付の近鉄バス運行情報（運行タイプA/B）と時刻表を取得します。
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+          description: 日付（YYYY-MM-DD形式）
+          example: '2025-05-07'
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                    example: '2025-05-07'
+                  operationType:
+                    type: string
+                    enum: ['A', 'B', null]
+                    example: 'A'
+                    description: 運行タイプ（A日/B日）または運行なし（null）
+                  message:
+                    type: string
+                    description: 運行がない場合のメッセージ
+                  stops:
+                    type: array
+                    description: バス停ごとの時刻表情報
+        '400':
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '日付形式が正しくありません。YYYY-MM-DD形式で指定してください。'
+
+  /api/kintetsu-bus/stop/{stopName}:
+    get:
+      summary: 指定バス停の時刻表を取得
+      description: 指定されたバス停の時刻表を指定日または当日の運行タイプに応じて取得します。
+      parameters:
+        - in: path
+          name: stopName
+          required: true
+          schema:
+            type: string
+          description: バス停名
+          example: '近畿大学東門前'
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+            format: date
+          description: 日付（YYYY-MM-DD形式）、指定しない場合は当日
+          example: '2025-05-07'
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                    example: '2025-05-07'
+                  stopName:
+                    type: string
+                    example: '近畿大学東門前'
+                  routeName:
+                    type: string
+                    example: '八戸ノ里駅前→近畿大学東門前'
+                  operationType:
+                    type: string
+                    enum: ['A', 'B']
+                    example: 'A'
+                  schedule:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hour:
+                          type: number
+                          example: 7
+                        minutes:
+                          type: array
+                          items:
+                            type: number
+                          example: [20, 30, 43, 55]
+        '400':
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '日付形式が正しくありません。YYYY-MM-DD形式で指定してください。'
+
+  /api/osaka-bus:
+    get:
+      summary: 大阪バスの時刻表データを取得
+      description: 大阪バスの時刻表データを取得します。データは事前に解析されたものを提供します。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                description: 大阪バスの時刻表データ
+
+  /api/osaka-bus/calendar/{date}:
+    get:
+      summary: 指定日の大阪バス運行情報を取得
+      description: 指定された日付の大阪バス運行情報（運行タイプA/B）と時刻表を取得します。
+      parameters:
+        - in: path
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+          description: 日付（YYYY-MM-DD形式）
+          example: '2025-05-07'
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                    example: '2025-05-07'
+                  operationType:
+                    type: string
+                    enum: ['A', 'B', null]
+                    example: 'A'
+                    description: 運行タイプ（A日/B日）または運行なし（null）
+                  message:
+                    type: string
+                    description: 運行がない場合のメッセージ
+                  stops:
+                    type: array
+                    description: バス停ごとの時刻表情報
+        '400':
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '日付形式が正しくありません。YYYY-MM-DD形式で指定してください。'
+
+  /api/osaka-bus/stop/{stopName}:
+    get:
+      summary: 指定バス停の時刻表を取得
+      description: 指定されたバス停の時刻表を指定日または当日の運行タイプに応じて取得します。
+      parameters:
+        - in: path
+          name: stopName
+          required: true
+          schema:
+            type: string
+          description: バス停名
+          example: '近畿大学東門前'
+        - in: query
+          name: date
+          required: false
+          schema:
+            type: string
+            format: date
+          description: 日付（YYYY-MM-DD形式）、指定しない場合は当日
+          example: '2025-05-07'
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date:
+                    type: string
+                    format: date
+                    example: '2025-05-07'
+                  stopName:
+                    type: string
+                    example: '近畿大学東門前'
+                  routeName:
+                    type: string
+                    example: '八戸ノ里駅前→近畿大学東門前'
+                  operationType:
+                    type: string
+                    enum: ['A', 'B']
+                    example: 'A'
+                  schedule:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        hour:
+                          type: number
+                          example: 7
+                        minutes:
+                          type: array
+                          items:
+                            type: number
+                          example: [20, 30, 43, 55]
+        '400':
+          description: 不正なリクエスト
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '日付形式が正しくありません。YYYY-MM-DD形式で指定してください。'
+
+  /api/all:
+    get:
+      summary: すべての鉄道・バス会社の時刻表データを取得
+      description: JR・近鉄の鉄道と近鉄バスの時刻表データをまとめて取得します。データは1時間ごとに更新されます。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kintetsu:
+                    type: object
+                    description: 近鉄の時刻表データ
+                  jr:
+                    type: object
+                    description: JRの時刻表データ
+                  kintetsuBus:
+                    type: object
+                    description: 近鉄バスの時刻表データ
+                  osakaBus:
+                    type: object
+                    description: 大阪バスの時刻表データ
+                  lastUpdated:
+                    type: string
+                    format: date-time
+                    description: データの最終更新日時
+                    example: '2025-05-04T10:30:00Z'
+
+  /api/cache/clear:
+    post:
+      summary: キャッシュをクリア
+      description: APIのキャッシュデータをクリアします。特定のキャッシュまたはすべてのキャッシュをクリアできます。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  description: クリアするキャッシュのキー。指定しない場合はすべてのキャッシュをクリアします。
+                  example: 'kintetsu'
+                  nullable: true
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: 'キャッシュ "kintetsu" をクリアしました'
+
+  /api/delay:
+    get:
+      summary: 遅延情報を取得
+      description: 近鉄およびJRの遅延情報を取得します。現時点では近鉄情報のみを返します。
+      responses:
+        '200':
+          description: 成功レスポンス
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kintetsu:
+                    type: object
+                    properties:
+                      servertime:
+                        type: string
+                        description: サーバー時刻（現在時刻）
+                        example: '2025年5月4日 21:51現在'
+                      status:
+                        type: string
+                        description: 遅延情報メッセージ
+                        example: '現在は１５分以上の列車の遅れはございません。'
+                      disruptions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            route:
+                              type: string
+                            status:
+                              type: string
+                            cause:
+                              type: string
+                            detailUrl:
+                              type: string
+                    description: 正常時は `status`、運休・遅延発生時は `disruptions` を返します
+                  jr:
+                    type: object
+                    description: JRの遅延情報（未実装時は null）
+                    nullable: true
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: '遅延情報の取得に失敗しました'

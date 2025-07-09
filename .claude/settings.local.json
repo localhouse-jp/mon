@@ -4,7 +4,13 @@
       "Bash(git rm:*)",
       "Bash(mkdir:*)",
       "WebFetch(domain:fonts.googleapis.com)",
-      "WebFetch(domain:fonts.gstatic.com)"
+      "WebFetch(domain:fonts.gstatic.com)",
+      "Bash(gh pr view:*)",
+      "Bash(/usr/bin/env bash -c \"gh pr view --json number,headRepository\" 2 >& 1)",
+      "Bash(/usr/local/bin/gh pr view --json number,headRepository)",
+      "Bash(/opt/homebrew/bin/gh pr view --json number,headRepository)",
+      "Bash(exec /bin/bash --noprofile --norc -c \"gh pr view --json number,headRepository\")",
+      "Bash(env -i PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin HOME=$HOME gh pr view --json number,headRepository)"
     ],
     "deny": []
   }

@@ -71,6 +71,11 @@ export const fetchTimetableData = async (): Promise<TimetableData> => {
       await fetchBusData(data, baseUrl);
     }
 
+    // 大阪バスデータの処理
+    if (!data.osakaBus) {
+      await fetchOsakaBusData(data, baseUrl);
+    }
+
     return data;
   } catch (error) {
     // 詳細なエラー情報を含めて例外を投げる
@@ -111,6 +116,30 @@ async function fetchBusData(data: TimetableData, baseUrl: string): Promise<void>
 }
 
 /**
+ * 大阪バス時刻表データを取得する補助関数
+ */
+async function fetchOsakaBusData(data: TimetableData, baseUrl: string): Promise<void> {
+  try {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+
+    const busUrl = `${baseUrl}/api/osaka-bus/calendar/${yyyy}-${mm}-${dd}`;
+    const res = await fetch(busUrl);
+
+    if (!res.ok) {
+      console.warn(`大阪バス時刻表の取得に失敗: ${res.status} ${res.statusText}`);
+      return;
+    }
+
+    data.osakaBus = await res.json();
+  } catch (error) {
+    console.warn('大阪バス時刻表の取得中にエラー:', error);
+  }
+}
+
+/**
  * 時刻表データから全駅のStationDirectionsマップを生成
  */
 export const createStationsMap = (data: TimetableData): Map<string, StationDirections> => {
@@ -129,7 +158,7 @@ export const createStationsMap = (data: TimetableData): Map<string, StationDirec
   // その他のデータ
   Object.entries(data).forEach(([company, stations]) => {
     if (company !== 'kintetsu' && company !== 'jr' &&
-      company !== 'kintetsuBus' && company !== 'lastUpdated' && stations) {
+      company !== 'kintetsuBus' && company !== 'osakaBus' && company !== 'lastUpdated' && stations) {
       Object.entries(stations as Record<string, StationDirections>)
         .forEach(([key, dirs]) => map.set(key, dirs));
     }

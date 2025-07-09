@@ -48,6 +48,11 @@ export interface TimetableData {
     operationType?: string; // 'A'または'B'
     date?: string;
   };
+  osakaBus?: {
+    stops?: BusStop[];
+    operationType?: string; // 'A'または'B'
+    date?: string;
+  };
   [company: string]: CompanyStations | undefined | string | { stops?: BusStop[], operationType?: string, date?: string };  // stringを追加して lastUpdated を許可
   lastUpdated: string;
 }
@@ -109,6 +114,7 @@ export const LINE_COLORS = {
   "大阪線": "#F8B400",  // 近鉄大阪線: 黄
   "ＪＲ俊徳道駅": "#009944",  // JRおおさか東線: 緑
   "近鉄バス": "#58A6FF",  // 近鉄バス: 青
+  "大阪バス": "#FF8C00",  // 大阪バス: オレンジ
 };
 
 // バス停のルート定義
@@ -118,6 +124,9 @@ export const BUS_ROUTES = {
   },
   "八戸ノ里駅前": {
     routes: ["八戸ノ里駅前→近畿大学東門前", "近畿大学東門前→八戸ノ里駅前"]
+  },
+  "俊徳道駅": {
+    routes: ["近畿大学東門前→俊徳道駅", "俊徳道駅→近畿大学東門前"]
   }
 };
 
