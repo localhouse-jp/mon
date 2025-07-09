@@ -16,7 +16,8 @@
       "Bash(/bin/bash -c \"git status\")",
       "Bash(/bin/bash -c \"git diff\")",
       "Bash(/bin/bash -c \"git log -5 --oneline\")",
-      "Bash(/usr/bin/git status)"
+      "Bash(/usr/bin/git status)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

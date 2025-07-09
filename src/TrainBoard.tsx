@@ -38,6 +38,8 @@ interface TrainBoardProps {
   error?: string;
   // 遅延情報
   delayResponse?: DelayResponse | null;
+  currentClass?: any;
+  nextClass?: any;
 }
 
 // 時間間隔の定数（ミリ秒）
@@ -51,7 +53,9 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
   holidayName,
   loading = false,
   error = "",
-  delayResponse
+  delayResponse,
+  currentClass,
+  nextClass
 }) => {
   // 現在時刻の状態管理 - 初期値を環境変数または現在時刻に設定
   const [now, setNow] = useState<Date>(initialDate);
@@ -554,6 +558,48 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
           </>
         )}
       </main>
+      {/* 現在の授業情報セクション */}
+      {(currentClass?.length > 0 || nextClass?.length > 0) && (
+        <div className="px-6 py-2 text-white">
+          <h3 className="text-lg font-bold mb-1">授業情報 (実験中)</h3>
+          <div className="bg-gray-800 rounded-lg p-2">
+            {currentClass?.length > 0 && (
+              <div className="mb-2">
+                <div className="text-base font-semibold text-green-400 mb-1">現在の授業</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                  {currentClass.map((cls: any, idx: number) => (
+                    <div key={idx} className="bg-gray-700 rounded p-1">
+                      <div className="text-xs font-medium">
+                        {cls.subject} @ {cls.classroom}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {cls.startTime} - {cls.endTime}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {nextClass?.length > 0 && (
+              <div>
+                <div className="text-base font-semibold text-blue-400 mb-1">次の授業</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                  {nextClass.map((cls: any, idx: number) => (
+                    <div key={idx} className="bg-gray-700 rounded p-1">
+                      <div className="text-xs font-medium">
+                        {cls.subject} @ {cls.classroom}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {cls.startTime} - {cls.endTime}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* 遅延情報セクション (フッター外) */}
       {delayResponse && (
         <div className="px-6 py-4 text-white">

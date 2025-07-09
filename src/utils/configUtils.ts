@@ -3,6 +3,7 @@
 // 型定義
 interface RuntimeConfig {
   API_BASE_URL: string;
+  CLASS_API_URL: string;
   SHOW_FOOTER: boolean;
   DEBUG_DATETIME: string | null;
   WINDOW_SCALE: number;
@@ -34,6 +35,7 @@ export const getConfig = (): RuntimeConfig => {
   // デフォルト値
   runtimeConfig = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://api:3000',
+    CLASS_API_URL: import.meta.env.VITE_CLASS_API_URL || '',
     SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
     DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null,
     WINDOW_SCALE: Number(import.meta.env.VITE_WINDOW_SCALE) || 2
@@ -68,6 +70,7 @@ export const getConfig = (): RuntimeConfig => {
 
 // 便利なアクセサ関数
 export const getApiBaseUrl = (): string => getConfig().API_BASE_URL;
+export const getClassApiUrl = (): string => getConfig().CLASS_API_URL;
 export const getShowFooter = (): boolean => getConfig().SHOW_FOOTER;
 export const getDebugDatetime = (): string | null => getConfig().DEBUG_DATETIME;
 export const getWindowScale = (): number => getConfig().WINDOW_SCALE;
