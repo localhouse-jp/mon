@@ -23,7 +23,7 @@ import {
   formatTime,
   getLineColor
 } from './utils/timeUtils';
-import { fetchTodayForecast, getWeatherEmoji } from './utils/weatherUtils';
+import { fetchTodayForecast, getWeatherIcon } from './utils/weatherUtils';
 
 // 環境変数からデバッグ日時を取得
 const debugDateTimeString = getDebugDatetime();
@@ -443,7 +443,10 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
                   }`}
               >
                 <div className="text-sm text-gray-300 min-w-[2.5rem]">{forecast.time}</div>
-                <div className="text-2xl">{getWeatherEmoji(forecast.icon)}</div>
+                {React.createElement(getWeatherIcon(forecast.icon), {
+                  className: "w-8 h-8 text-white",
+                  title: forecast.description
+                })}
                 <div className="text-lg font-bold text-white min-w-[3rem]">{forecast.temp}℃</div>
               </div>
             ))

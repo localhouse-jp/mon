@@ -1,3 +1,15 @@
+import React from 'react';
+import { 
+  WiDaySunny, 
+  WiNightClear, 
+  WiDayCloudy, 
+  WiNightCloudy, 
+  WiCloudy, 
+  WiRain, 
+  WiThunderstorm, 
+  WiSnow, 
+  WiFog 
+} from 'react-icons/wi';
 import { CurrentWeather, TodayForecast, WeatherResponse } from '../types/timetable';
 import { getWeatherConfig } from './envUtils';
 
@@ -168,7 +180,35 @@ export async function fetchCurrentWeather(): Promise<CurrentWeather | null> {
 }
 
 /**
- * 天気アイコンのエモジマッピング
+ * 天気アイコンのReactコンポーネント（react-icons/wi）
+ */
+export function getWeatherIcon(iconCode: string): React.ComponentType<any> {
+  const iconMap: Record<string, React.ComponentType<any>> = {
+    '01d': WiDaySunny,        // clear sky day
+    '01n': WiNightClear,      // clear sky night
+    '02d': WiDayCloudy,       // few clouds day
+    '02n': WiNightCloudy,     // few clouds night
+    '03d': WiCloudy,          // scattered clouds
+    '03n': WiCloudy,          // scattered clouds
+    '04d': WiCloudy,          // broken clouds
+    '04n': WiCloudy,          // broken clouds
+    '09d': WiRain,            // shower rain
+    '09n': WiRain,            // shower rain
+    '10d': WiRain,            // rain day
+    '10n': WiRain,            // rain night
+    '11d': WiThunderstorm,    // thunderstorm
+    '11n': WiThunderstorm,    // thunderstorm
+    '13d': WiSnow,            // snow
+    '13n': WiSnow,            // snow
+    '50d': WiFog,             // mist
+    '50n': WiFog,             // mist
+  };
+
+  return iconMap[iconCode] || WiDaySunny;
+}
+
+/**
+ * 天気アイコンのエモジマッピング（後方互換性のため残す）
  */
 export function getWeatherEmoji(iconCode: string): string {
   const iconMap: Record<string, string> = {

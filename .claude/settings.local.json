@@ -10,7 +10,13 @@
       "Bash(/usr/local/bin/gh pr view --json number,headRepository)",
       "Bash(/opt/homebrew/bin/gh pr view --json number,headRepository)",
       "Bash(exec /bin/bash --noprofile --norc -c \"gh pr view --json number,headRepository\")",
-      "Bash(env -i PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin HOME=$HOME gh pr view --json number,headRepository)"
+      "Bash(env -i PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin HOME=$HOME gh pr view --json number,headRepository)",
+      "Bash(bun add:*)",
+      "Bash(git add:*)",
+      "Bash(/bin/bash -c \"git status\")",
+      "Bash(/bin/bash -c \"git diff\")",
+      "Bash(/bin/bash -c \"git log -5 --oneline\")",
+      "Bash(/usr/bin/git status)"
     ],
     "deny": []
   }
