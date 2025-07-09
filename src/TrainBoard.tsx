@@ -14,7 +14,6 @@ import {
   TodayForecast,
   Train
 } from './types/timetable';
-import { getDebugDatetime, getShowFooter } from './utils/configUtils';
 import {
   calculateRemainingMinutes,
   extractStationName,
@@ -25,8 +24,8 @@ import {
 } from './utils/timeUtils';
 import { fetchTodayForecast, getWeatherIcon } from './utils/weatherUtils';
 
-// 環境変数からデバッグ日時を取得
-const debugDateTimeString = getDebugDatetime();
+// 環境変数からデバッグ日時を取得（同期版を使用）
+const debugDateTimeString = import.meta.env.VITE_DEBUG_DATETIME || null;
 const initialDate = debugDateTimeString ? new Date(debugDateTimeString) : new Date();
 
 interface TrainBoardProps {
@@ -632,7 +631,7 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
         </div>
       )}
       {/* フッター：2行レイアウト */}
-      {getShowFooter() && (
+      {import.meta.env.VITE_SHOW_FOOTER !== 'false' && (
         <footer className="bg-gray-800 text-gray-500 text-sm p-4 h-24">
           <div className="w-full flex justify-between items-center">
             <div className='flex flex-col absolute right-0 left-0 bottom-8 text-center'>

@@ -29,7 +29,7 @@ const getDetailedErrorInfo = (error: unknown, url: string): string => {
  * 時刻表データを取得し、不要な八戸ノ里駅前データを除外
  */
 export const fetchTimetableData = async (): Promise<TimetableData> => {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = await getApiBaseUrl();
   const url = `${baseUrl}/api/all`;
 
   try {

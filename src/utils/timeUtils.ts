@@ -1,5 +1,4 @@
 import { LINE_COLORS } from '../types/timetable';
-import { getCurrentDateTime } from './configUtils';
 
 // 定数
 const MINUTES_PER_HOUR = 60;
@@ -29,7 +28,7 @@ export const formatTime = (hour: string | number, minute: string | number): stri
 export const calculateRemainingMinutes = (
   hour: string | number,
   minute: string | number,
-  now: Date = getCurrentDateTime()
+  now: Date = new Date()
 ): number => {
   const trainHour = typeof hour === 'string' ? parseInt(hour, 10) : hour;
   const trainMinute = typeof minute === 'string' ? parseInt(minute, 10) : minute;
@@ -66,7 +65,7 @@ export const formatRemainingTime = (minutes: number): string => {
  * @param date 日付オブジェクト
  * @returns フォーマットされた日付文字列 (例: "2023年5月1日（月）")
  */
-export const formatDate = (date: Date = getCurrentDateTime()): string => {
+export const formatDate = (date: Date = new Date()): string => {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -171,7 +170,7 @@ export const parseHolidayCsv = (text: string): Record<string, string> => {
  * @param holidaysMap 祝日マップ
  */
 export const checkIsHoliday = (
-  date: Date = getCurrentDateTime(),
+  date: Date = new Date(),
   holidaysMap: Record<string, string>
 ): { isHoliday: boolean; name: string } => {
   const yyyy = date.getFullYear();
@@ -198,11 +197,11 @@ export const fetchHolidayStatus = async (): Promise<{ isHoliday: boolean; name: 
     const decoder = new TextDecoder('shift_jis');
     const text = decoder.decode(buffer);
     const holidaysMap = parseHolidayCsv(text);
-    return checkIsHoliday(getCurrentDateTime(), holidaysMap);
+    return checkIsHoliday(new Date(), holidaysMap);
   } catch (e) {
     console.error('祝日データ取得エラー:', e);
     // 取得失敗時は週末判定のみ
-    const today = getCurrentDateTime();
+    const today = new Date();
     const dow = today.getDay();
     if (dow === 0) return { isHoliday: true, name: '日曜日' };
     if (dow === 6) return { isHoliday: true, name: '土曜日' };

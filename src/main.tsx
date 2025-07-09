@@ -5,7 +5,7 @@ import App from "./App";
 import { getWindowScale } from "./utils/configUtils";
 
 (async () => {
-  await getCurrentWebview().setZoom(getWindowScale())
+  await getCurrentWebview().setZoom(await getWindowScale())
 })()
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
