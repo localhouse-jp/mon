@@ -75,7 +75,7 @@ function App() {
   // 現在の授業情報を取得
   const fetchCurrentClass = async () => {
     try {
-      const response = await fetch(getClassApiUrl());
+      const response = await fetch(await getClassApiUrl());
       if (!response.ok) throw new Error(`APIエラー: ${response.status}`);
       const data = await response.json();
 

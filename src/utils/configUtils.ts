@@ -1,4 +1,5 @@
 // 実行時設定を管理するユーティリティ
+import { getEnvVar } from './envUtils';
 
 // 型定義
 interface RuntimeConfig {
@@ -27,7 +28,7 @@ let runtimeConfig: RuntimeConfig | null = null;
 /**
  * 実行時設定を取得する
  */
-export const getConfig = (): RuntimeConfig => {
+export const getConfig = async (): Promise<RuntimeConfig> => {
   if (runtimeConfig !== null) {
     return runtimeConfig;
   }
@@ -35,7 +36,7 @@ export const getConfig = (): RuntimeConfig => {
   // デフォルト値
   runtimeConfig = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://api:3000',
-    CLASS_API_URL: import.meta.env.VITE_CLASS_API_URL || '',
+    CLASS_API_URL: (await getEnvVar('CLASS_API_URL')) || import.meta.env.VITE_CLASS_API_URL || '',
     SHOW_FOOTER: import.meta.env.VITE_SHOW_FOOTER !== 'false',
     DEBUG_DATETIME: import.meta.env.VITE_DEBUG_DATETIME || null,
     WINDOW_SCALE: Number(import.meta.env.VITE_WINDOW_SCALE) || 2
@@ -69,17 +70,17 @@ export const getConfig = (): RuntimeConfig => {
 };
 
 // 便利なアクセサ関数
-export const getApiBaseUrl = (): string => getConfig().API_BASE_URL;
-export const getClassApiUrl = (): string => getConfig().CLASS_API_URL;
-export const getShowFooter = (): boolean => getConfig().SHOW_FOOTER;
-export const getDebugDatetime = (): string | null => getConfig().DEBUG_DATETIME;
-export const getWindowScale = (): number => getConfig().WINDOW_SCALE;
+export const getApiBaseUrl = async (): Promise<string> => (await getConfig()).API_BASE_URL;
+export const getClassApiUrl = async (): Promise<string> => (await getConfig()).CLASS_API_URL;
+export const getShowFooter = async (): Promise<boolean> => (await getConfig()).SHOW_FOOTER;
+export const getDebugDatetime = async (): Promise<string | null> => (await getConfig()).DEBUG_DATETIME;
+export const getWindowScale = async (): Promise<number> => (await getConfig()).WINDOW_SCALE;
 
 /**
  * 現在時刻を取得（デバッグモードでは固定時刻）
  */
-export const getCurrentDateTime = (): Date => {
-  const debugDatetime = getDebugDatetime();
+export const getCurrentDateTime = async (): Promise<Date> => {
+  const debugDatetime = await getDebugDatetime();
   if (debugDatetime) {
     try {
       return new Date(debugDatetime);
