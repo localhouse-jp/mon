@@ -565,11 +565,11 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
             {currentClass?.length > 0 && (
               <div className="mb-2">
                 <div className="text-base font-semibold text-green-400 mb-1">現在の授業</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
                   {currentClass.map((cls: any, idx: number) => (
                     <div key={idx} className="bg-gray-700 rounded p-1">
                       <div className="text-xs font-medium">
-                        {cls.subject} @ {cls.classroom}
+                        {cls.subject}{cls.classroom}
                       </div>
                       <div className="text-xs text-gray-400">
                         {cls.startTime} - {cls.endTime}
@@ -582,11 +582,11 @@ const TrainBoard: React.FC<TrainBoardProps> = ({
             {nextClass?.length > 0 && (
               <div>
                 <div className="text-base font-semibold text-blue-400 mb-1">次の授業</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
                   {nextClass.map((cls: any, idx: number) => (
                     <div key={idx} className="bg-gray-700 rounded p-1">
                       <div className="text-xs font-medium">
-                        {cls.subject} @ {cls.classroom}
+                        {cls.subject}{cls.classroom}
                       </div>
                       <div className="text-xs text-gray-400">
                         {cls.startTime} - {cls.endTime}
